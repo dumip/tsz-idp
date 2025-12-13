@@ -34,7 +34,7 @@ graph TB
     end
 
     subgraph "AWS Cognito"
-        UP[User Pool]
+        UP[User Pool<br/>/oauth2 endpoints]
         IP[Identity Pool]
         GOOGLE[Google IdP]
     end
@@ -43,11 +43,15 @@ graph TB
         DDB[DynamoDB<br/>Device Codes]
     end
 
-    WEB --> LOGIN
-    MOBILE --> LOGIN
+    WEB -->|OIDC /oauth2/authorize| UP
+    MOBILE -->|OIDC /oauth2/authorize| UP
+    UP -->|Redirect to custom UI| LOGIN
+    LOGIN -->|SDK calls + redirect back| UP
+    UP -->|Tokens via redirect_uri| WEB
+    UP -->|Tokens via redirect_uri| MOBILE
+
     VR -->|Device Code Flow| APIGW
 
-    LOGIN -->|Direct SDK calls| UP
     LOGIN --> APIGW
     APIGW --> DEVICE_CODE
     APIGW --> PROFILE
@@ -64,13 +68,26 @@ graph TB
 
 | Component | Responsibility |
 |-----------|----------------|
-| React Login UI | Custom branded authentication interface, calls Cognito directly via SDK |
+| Cognito User Pool | OIDC provider - exposes /oauth2 endpoints, issues tokens, manages users, handles Google federation |
+| React Login UI | Custom branded login experience - Cognito redirects here for user authentication, then redirects back to Cognito |
 | API Gateway | REST API routing for Device Code and Profile operations |
 | Device Code Lambda | RFC 8628 Device Code Flow implementation |
 | Profile Lambda | User profile CRUD, progressive profiling |
-| Cognito User Pool | User storage, token issuance, Google federation |
 | Cognito Identity Pool | Anonymous user identity management (no profile storage) |
 | DynamoDB (Device Codes) | Temporary storage for device code flow state |
+
+### Client Integration Flow
+
+Client applications integrate via standard OIDC with Cognito:
+
+1. **Client** → Cognito `/oauth2/authorize` (standard OIDC)
+2. **Cognito** → Redirects user to custom React Login UI
+3. **Login UI** → User authenticates, Login UI calls Cognito SDK
+4. **Login UI** → Redirects back to Cognito with auth result
+5. **Cognito** → Redirects to client's `redirect_uri` with authorization code
+6. **Client** → Exchanges code for tokens at Cognito `/oauth2/token`
+
+This ensures clients use standard OIDC libraries while you control the login UX.
 
 ### Frontend-to-Cognito Direct Integration
 
@@ -90,19 +107,34 @@ The React Login UI communicates directly with Cognito using `amazon-cognito-iden
 
 ## Sequence Diagrams
 
-### Web App / Mobile App Authentication Flow
+### Web App / Mobile App Authentication Flow (OIDC)
 
 ```mermaid
 sequenceDiagram
     participant User
     participant App as Web/Mobile App
+    participant Cognito as Cognito /oauth2
     participant LoginUI as React Login UI
-    participant Cognito as Cognito User Pool
     participant Google as Google OAuth
+
+    Note over User,Google: Email/Password Sign In (OIDC Authorization Code + PKCE)
+    User->>App: Click "Sign In"
+    App->>App: Generate PKCE code_verifier, code_challenge
+    App->>Cognito: GET /oauth2/authorize?response_type=code&client_id={id}&redirect_uri={app_callback}&scope=openid email profile&code_challenge={challenge}&code_challenge_method=S256
+    Cognito->>LoginUI: Redirect to custom UI /login
+    User->>LoginUI: Enter email, password
+    LoginUI->>Cognito: signIn(email, password) via SDK
+    Cognito-->>LoginUI: Authentication success
+    LoginUI->>Cognito: Redirect back with auth session
+    Cognito-->>App: Redirect to {app_callback}?code={authorization_code}
+    App->>Cognito: POST /oauth2/token grant_type=authorization_code&code={code}&code_verifier={verifier}
+    Cognito-->>App: {id_token, access_token, refresh_token}
+    App->>App: Store tokens, user authenticated
 
     Note over User,Google: Email/Password Sign Up
     User->>App: Click "Sign Up"
-    App->>LoginUI: Navigate to /signup
+    App->>Cognito: GET /oauth2/authorize (same as above)
+    Cognito->>LoginUI: Redirect to custom UI /signup
     User->>LoginUI: Enter email, password
     LoginUI->>Cognito: signUp(email, password)
     Cognito-->>LoginUI: UserSub (pending confirmation)
@@ -110,66 +142,59 @@ sequenceDiagram
     User->>LoginUI: Enter verification code
     LoginUI->>Cognito: confirmSignUp(email, code)
     Cognito-->>LoginUI: Success
-    LoginUI-->>App: Redirect to login
-
-    Note over User,Google: Email/Password Sign In
-    User->>App: Click "Sign In"
-    App->>LoginUI: Navigate to /login
-    User->>LoginUI: Enter email, password
     LoginUI->>Cognito: signIn(email, password)
-    Cognito-->>LoginUI: ID Token, Access Token, Refresh Token
-    LoginUI-->>App: Redirect with tokens
-    App->>App: Store tokens, user authenticated
+    Cognito-->>LoginUI: Authentication success
+    LoginUI->>Cognito: Redirect back with auth session
+    Cognito-->>App: Redirect to {app_callback}?code={authorization_code}
+    App->>Cognito: POST /oauth2/token
+    Cognito-->>App: {id_token, access_token, refresh_token}
 
-    Note over User,Google: Google OAuth Sign In (OIDC Authorization Code Flow with PKCE)
+    Note over User,Google: Google OAuth Sign In
     User->>App: Click "Sign in with Google"
-    App->>LoginUI: Navigate to /login
-    User->>LoginUI: Click Google button
-    LoginUI->>LoginUI: Generate code_verifier, code_challenge (PKCE)
-    LoginUI->>Cognito: GET /oauth2/authorize?response_type=code&client_id={id}&redirect_uri={uri}&scope=openid email profile&code_challenge={challenge}&code_challenge_method=S256&identity_provider=Google
+    App->>App: Generate PKCE code_verifier, code_challenge
+    App->>Cognito: GET /oauth2/authorize?...&identity_provider=Google
     Cognito->>Google: Redirect to Google OAuth
     User->>Google: Authenticate with Google
     Google-->>Cognito: Authorization code
     Cognito->>Google: Exchange code for Google tokens
     Google-->>Cognito: Google ID token, access token
-    Cognito-->>LoginUI: Redirect to {redirect_uri}?code={authorization_code}
-    LoginUI->>Cognito: POST /oauth2/token grant_type=authorization_code&code={code}&redirect_uri={uri}&code_verifier={verifier}
-    Cognito-->>LoginUI: {id_token, access_token, refresh_token}
-    LoginUI-->>App: Redirect with tokens
+    Cognito-->>App: Redirect to {app_callback}?code={authorization_code}
+    App->>Cognito: POST /oauth2/token
+    Cognito-->>App: {id_token, access_token, refresh_token}
     App->>App: Store tokens, user authenticated
 ```
 
 ### OIDC Authorization Code Flow with PKCE (Detailed)
 
-This flow is used for all OAuth-based authentication (Google, future social providers).
+This is the standard OIDC flow. Client apps initiate auth with Cognito, Cognito shows the custom UI, tokens flow back to the client.
 
 ```mermaid
 sequenceDiagram
     participant App as Client App
-    participant LoginUI as React Login UI
     participant Cognito as Cognito /oauth2
+    participant LoginUI as React Login UI
     participant IdP as Identity Provider (Google)
 
-    Note over App,IdP: 1. Authorization Request
-    App->>LoginUI: Initiate login
-    LoginUI->>LoginUI: Generate PKCE pair:<br/>code_verifier = random(43-128 chars)<br/>code_challenge = BASE64URL(SHA256(code_verifier))
-    LoginUI->>Cognito: GET /oauth2/authorize<br/>?response_type=code<br/>&client_id={client_id}<br/>&redirect_uri={callback}<br/>&scope=openid email profile<br/>&state={csrf_token}<br/>&code_challenge={challenge}<br/>&code_challenge_method=S256<br/>&identity_provider=Google
+    Note over App,IdP: 1. Authorization Request (Client initiates)
+    App->>App: Generate PKCE pair:<br/>code_verifier = random(43-128 chars)<br/>code_challenge = BASE64URL(SHA256(code_verifier))
+    App->>Cognito: GET /oauth2/authorize<br/>?response_type=code<br/>&client_id={client_id}<br/>&redirect_uri={app_callback}<br/>&scope=openid email profile<br/>&state={csrf_token}<br/>&code_challenge={challenge}<br/>&code_challenge_method=S256
 
-    Note over App,IdP: 2. User Authentication at IdP
-    Cognito->>IdP: Redirect to IdP authorization
-    IdP->>IdP: User authenticates
-    IdP-->>Cognito: Authorization code + state
+    Note over App,IdP: 2. Custom UI Authentication
+    Cognito->>LoginUI: Redirect to custom login UI
+    LoginUI->>LoginUI: User enters credentials
+    LoginUI->>Cognito: Authenticate via SDK (signIn)
+    Cognito-->>LoginUI: Auth success
+    LoginUI->>Cognito: Complete OAuth flow
 
-    Note over App,IdP: 3. Authorization Response
-    Cognito-->>LoginUI: Redirect to {redirect_uri}<br/>?code={authorization_code}<br/>&state={csrf_token}
-    LoginUI->>LoginUI: Verify state matches
+    Note over App,IdP: 3. Authorization Response (to Client)
+    Cognito-->>App: Redirect to {app_callback}<br/>?code={authorization_code}<br/>&state={csrf_token}
+    App->>App: Verify state matches
 
-    Note over App,IdP: 4. Token Exchange
-    LoginUI->>Cognito: POST /oauth2/token<br/>Content-Type: application/x-www-form-urlencoded<br/><br/>grant_type=authorization_code<br/>&code={authorization_code}<br/>&redirect_uri={callback}<br/>&code_verifier={code_verifier}<br/>&client_id={client_id}
+    Note over App,IdP: 4. Token Exchange (Client to Cognito)
+    App->>Cognito: POST /oauth2/token<br/>Content-Type: application/x-www-form-urlencoded<br/><br/>grant_type=authorization_code<br/>&code={authorization_code}<br/>&redirect_uri={app_callback}<br/>&code_verifier={code_verifier}<br/>&client_id={client_id}
 
     Note over App,IdP: 5. Token Response (OIDC Compliant)
-    Cognito-->>LoginUI: {<br/>  "id_token": "{JWT with sub, iss, aud, exp, iat, email...}",<br/>  "access_token": "{JWT}",<br/>  "refresh_token": "{opaque}",<br/>  "token_type": "Bearer",<br/>  "expires_in": 3600<br/>}
-    LoginUI-->>App: Tokens delivered
+    Cognito-->>App: {<br/>  "id_token": "{JWT with sub, iss, aud, exp, iat, email...}",<br/>  "access_token": "{JWT}",<br/>  "refresh_token": "{opaque}",<br/>  "token_type": "Bearer",<br/>  "expires_in": 3600<br/>}
 ```
 
 ### Anonymous Authentication Flow
@@ -259,13 +284,15 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant App as Web/Mobile App
+    participant Cognito as Cognito /oauth2
     participant LoginUI as React Login UI
-    participant Cognito as Cognito User Pool
     participant IdentityPool as Cognito Identity Pool
 
-    Note over User,IdentityPool: User is currently anonymous
+    Note over User,IdentityPool: User is currently anonymous (has Identity Pool ID)
     User->>App: Click "Create Account"
-    App->>LoginUI: Navigate to /signup with anonymous_id
+    App->>App: Generate PKCE, store anonymous_id
+    App->>Cognito: GET /oauth2/authorize?...&state={anonymous_id}
+    Cognito->>LoginUI: Redirect to /signup
     User->>LoginUI: Enter email, password
     LoginUI->>Cognito: signUp(email, password)
     Cognito-->>LoginUI: UserSub
@@ -274,11 +301,14 @@ sequenceDiagram
     LoginUI->>Cognito: confirmSignUp(email, code)
     Cognito-->>LoginUI: Success
     LoginUI->>Cognito: signIn(email, password)
-    Cognito-->>LoginUI: ID Token, Access Token, Refresh Token
-    LoginUI->>IdentityPool: GetCredentialsForIdentity(identityId, {cognito_token})
+    Cognito-->>LoginUI: Auth success
+    LoginUI->>Cognito: Complete OAuth flow
+    Cognito-->>App: Redirect with authorization code
+    App->>Cognito: POST /oauth2/token
+    Cognito-->>App: {id_token, access_token, refresh_token}
+    App->>IdentityPool: GetCredentialsForIdentity(identityId, {cognito_token})
     Note over IdentityPool: Links anonymous identity to authenticated user
-    IdentityPool-->>LoginUI: Updated credentials
-    LoginUI-->>App: Redirect with tokens
+    IdentityPool-->>App: Updated credentials
     App->>App: User is now registered
 ```
 | Sign Up | `signUp()` |

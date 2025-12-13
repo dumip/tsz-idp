@@ -1,0 +1,121 @@
+# Implementation Plan
+
+- [ ] 1. Set up project structure and CDK infrastructure foundation
+  - [ ] 1.1 Initialize CDK TypeScript project with required dependencies
+    - Set up AWS CDK project structure
+    - Configure TypeScript, ESLint, and testing framework (Jest + fast-check)
+    - Add dependencies: aws-cdk-lib, constructs, @aws-sdk/client-cognito-identity-provider, @aws-sdk/client-dynamodb, fast-check, aws-jwt-verify
+    - _Requirements: 1.1, 1.2_
+  - [ ] 1.2 Create Cognito User Pool with custom attributes and security settings
+    - Configure User Pool with email/password authentication
+    - Add custom attributes: displayName, firstName, lastName, interests
+    - Configure password policy and account recovery
+    - Set token validity: access token 1 hour, refresh token 30 days
+    - Enable advanced security for account lockout (5 attempts, 15 min)
+    - _Requirements: 2.1, 6.1, 11.1, 13.1_
+  - [ ] 1.3 Configure Google federation in User Pool
+    - Set up Google as identity provider
+    - Configure attribute mapping from Google claims
+    - _Requirements: 3.1, 3.2_
+  - [ ] 1.4 Create Cognito Identity Pool for anonymous authentication
+    - Configure unauthenticated identity support
+    - Link to User Pool for authenticated identities
+    - _Requirements: 4.1, 4.2_
+  - [ ] 1.5 Create User Pool App Clients for each client type
+    - Create public client for web/mobile (PKCE required, no secret)
+    - Create public client for VR (Device Code flow)
+    - Configure scopes and callback URLs per client
+    - _Requirements: 10.1, 10.2, 10.3, 10.4_
+  - [ ] 1.6 Create DynamoDB table for Device Code storage
+    - Create table with deviceCode as partition key
+    - Add GSI on userCode for lookup
+    - Configure TTL on ttl attribute
+    - _Requirements: 9.1, 9.2_
+
+- [ ] 2. Implement PKCE utilities for Login UI
+  - [ ] 2.1 Create PKCE utilities
+    - Implement code_verifier generation
+    - Implement code_challenge computation (S256)
+    - _Requirements: 1.1, 10.4_
+  - [ ] 2.2 Write property test for PKCE Validation
+    - **Property 1: PKCE Validation**
+    - **Validates: Requirements 1.1**
+
+- [ ] 3. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 4. Implement Device Code Lambda (RFC 8628)
+  - [ ] 4.1 Implement POST /device/code endpoint
+    - Generate unique device_code and user_code
+    - Store in DynamoDB with 10-minute expiration
+    - Return verification_uri and polling interval
+    - _Requirements: 9.1, 9.2_
+  - [ ] 4.2 Write property test for Device Code Format and Expiration
+    - **Property 15: Device Code Format and Expiration**
+    - **Validates: Requirements 9.1, 9.2**
+  - [ ] 4.3 Implement POST /device/token endpoint (polling)
+    - Return authorization_pending for pending codes
+    - Return tokens for authorized codes
+    - Return expired_token for expired codes
+    - _Requirements: 9.4, 9.5_
+  - [ ] 4.4 Write property test for Device Code Polling States
+    - **Property 16: Device Code Polling States**
+    - **Validates: Requirements 9.4, 9.5**
+  - [ ] 4.5 Implement POST /device/authorize endpoint
+    - Validate user authentication via access token
+    - Store tokens in DynamoDB record
+    - Update status to authorized
+    - _Requirements: 9.3, 9.4_
+
+- [ ] 5. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 6. Build React Login UI (Cognito redirects here during OIDC flow)
+  - [ ] 6.1 Set up React project with routing
+    - Configure React with TypeScript
+    - Set up routes: /login, /signup, /forgot-password, /activate, /oauth2/callback
+    - Add AWS Amplify Auth or amazon-cognito-identity-js
+    - Handle OIDC parameters (client_id, redirect_uri, state, code_challenge) from Cognito redirect
+    - _Requirements: 12.1, 12.4, 1.1_
+  - [ ] 6.2 Implement login page
+    - Email/password form calling Cognito signIn()
+    - Google OAuth button redirecting to Cognito /oauth2/authorize
+    - Error handling with uniform messages (Cognito provides these)
+    - _Requirements: 12.2, 2.2, 3.1_
+  - [ ] 6.3 Implement signup page
+    - Registration form calling Cognito signUp()
+    - Email verification code input calling confirmSignUp()
+    - _Requirements: 2.1, 12.2_
+  - [ ] 6.4 Implement forgot password page
+    - Password reset request calling Cognito forgotPassword()
+    - Reset code and new password form calling forgotPasswordSubmit()
+    - _Requirements: 2.4, 12.2_
+  - [ ] 6.5 Implement device activation page (/activate)
+    - User code input form
+    - Login flow after code validation
+    - Call POST /device/authorize after successful login
+    - Success/error states
+    - _Requirements: 9.3, 12.2_
+  - [ ] 6.6 Implement responsive design
+    - Mobile-friendly layouts
+    - VR-friendly large touch targets
+    - _Requirements: 12.4_
+
+- [ ] 7. Deploy infrastructure with CDK
+  - [ ] 7.1 Create CDK stack for Cognito resources
+    - Deploy User Pool and Identity Pool
+    - Configure Cognito domain for /oauth2 endpoints
+    - Configure User Pool to redirect to custom Login UI during authorization
+    - Set up callback URLs for Login UI to redirect back to Cognito
+    - _Requirements: 1.4, 1.5, 12.1_
+  - [ ] 7.2 Create CDK stack for API Gateway and Device Code Lambda
+    - Deploy Device Code Lambda
+    - Configure API Gateway routes for /device/code, /device/token, /device/authorize
+    - _Requirements: 9.1_
+  - [ ] 7.3 Create CDK stack for React UI hosting
+    - Deploy S3 bucket for static assets
+    - Configure CloudFront distribution
+    - _Requirements: 12.1_
+
+- [ ] 8. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
