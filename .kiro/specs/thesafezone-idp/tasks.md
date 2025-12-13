@@ -66,47 +66,44 @@
     - Handle OIDC parameters (client_id, redirect_uri, state, code_challenge) from Cognito redirect
     - Configure TheSafeZone brand styling: fonts (Baloo Paaji 2, Montserrat), color palette, and visual identity from https://thesafezone.eu/
     - _Requirements: 12.1, 12.4, 1.1_
-  - [ ] 4.2 Create PKCE utilities
-    - Implement code_verifier generation
-    - Implement code_challenge computation (S256)
-    - _Requirements: 1.1, 10.4_
-  - [ ] 4.3 Write property test for PKCE Validation
-    - **Property 1: PKCE Validation**
-    - **Validates: Requirements 1.1**
-  - [ ] 4.4 Implement login page
+  - [ ] 4.2 Implement login page
     - Email/password form calling Cognito signIn()
     - Google OAuth button redirecting to Cognito /oauth2/authorize
     - Error handling with uniform messages (Cognito provides these)
     - Apply TheSafeZone styling: rounded inputs, brand colors, consistent typography
     - _Requirements: 12.2, 2.2, 3.1_
-  - [ ] 4.5 Implement signup page
+  - [ ] 4.3 Implement signup page
     - Registration form calling Cognito signUp()
     - Email verification code input calling confirmSignUp()
     - Apply TheSafeZone styling consistent with login page
     - _Requirements: 2.1, 12.2_
-  - [ ] 4.6 Implement forgot password page
+  - [ ] 4.4 Implement forgot password page
     - Password reset request calling Cognito forgotPassword()
     - Reset code and new password form calling forgotPasswordSubmit()
     - Apply TheSafeZone styling consistent with login page
     - _Requirements: 2.4, 12.2_
-  - [ ] 4.7 Implement device activation page (/activate)
+  - [ ] 4.5 Implement device activation page (/activate)
     - User code input form
     - Login flow after code validation
     - Call POST /device/authorize after successful login
     - Success/error states
     - Apply TheSafeZone styling consistent with login page
     - _Requirements: 9.3, 12.2_
-  - [ ] 4.8 Implement responsive design
+  - [ ] 4.6 Implement responsive design
     - Mobile-friendly layouts
     - VR-friendly large touch targets
     - _Requirements: 12.4_
-  - [ ] 4.9 Build sample client application
+  - [ ] 4.7 Build sample client application
     - Create a standalone demo app that initiates OIDC login flow (redirects to Login UI)
+    - Implement PKCE utilities: code_verifier generation and code_challenge computation (S256)
     - After successful authentication, display user profile information (displayName, firstName, lastName, email, interests)
     - Display token information (access token expiry, ID token claims, refresh token status)
     - Include logout functionality
     - Apply TheSafeZone styling consistent with Login UI
-    - _Requirements: 1.1, 1.4, 12.1_
+    - _Requirements: 1.1, 1.4, 10.4, 12.1_
+  - [ ] 4.8 Write property test for PKCE Validation
+    - **Property 1: PKCE Validation**
+    - **Validates: Requirements 1.1**
 
 - [ ] 5. Deploy infrastructure with CDK
   - [ ] 5.1 Create CDK stack for Cognito resources
