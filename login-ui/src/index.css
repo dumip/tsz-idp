@@ -141,3 +141,58 @@ input, textarea, select {
   display: flex;
   flex-direction: column;
 }
+
+/* ============================================
+   RESPONSIVE DESIGN SYSTEM
+   ============================================
+   Breakpoints:
+   - Mobile: < 480px
+   - Mobile landscape / Small tablet: 480px - 640px
+   - Tablet: 640px - 1024px
+   - Desktop: 1024px - 1440px
+   - VR / Large screens: > 1440px
+   ============================================ */
+
+/* Mobile-first responsive font sizing */
+@media (max-width: 480px) {
+  :root {
+    --spacing-md: 0.875rem;
+    --spacing-lg: 1.25rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+  }
+  
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 640px) and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+/* VR-friendly large touch targets and sizing */
+@media (min-width: 1440px) {
+  :root {
+    --spacing-md: 1.125rem;
+    --spacing-lg: 1.75rem;
+    --spacing-xl: 2.5rem;
+  }
+  
+  html {
+    font-size: 18px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase touch target sizes for touch devices */
+  button,
+  input,
+  a {
+    min-height: 44px; /* iOS minimum touch target */
+  }
+}

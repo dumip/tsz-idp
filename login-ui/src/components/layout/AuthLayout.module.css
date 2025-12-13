@@ -1,5 +1,6 @@
 .container {
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -41,10 +42,42 @@
   color: var(--color-text-on-primary);
   opacity: 0.7;
   font-size: 0.875rem;
+  text-align: center;
+  padding: 0 var(--spacing-md);
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Extra small devices (phones in portrait) */
+@media (max-width: 480px) {
+  .container {
+    padding: var(--spacing-sm);
+    justify-content: flex-start;
+    padding-top: var(--spacing-xl);
+  }
+
+  .logoText {
+    font-size: 1.75rem;
+  }
+
+  .tagline {
+    font-size: 0.875rem;
+  }
+
+  .content {
+    gap: var(--spacing-md);
+  }
+
+  .footer {
+    margin-top: var(--spacing-lg);
+    font-size: 0.75rem;
+  }
+}
+
+/* Small devices (phones in landscape, small tablets) */
+@media (min-width: 481px) and (max-width: 640px) {
   .container {
     padding: var(--spacing-sm);
   }
@@ -58,9 +91,71 @@
   }
 }
 
-/* VR-friendly large touch targets */
-@media (min-width: 1024px) {
+/* Medium devices (tablets) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .content {
+    max-width: 440px;
+  }
+}
+
+/* Large devices (desktops) */
+@media (min-width: 1025px) and (max-width: 1440px) {
   .content {
     max-width: 480px;
+  }
+}
+
+/* VR-friendly large screens */
+@media (min-width: 1441px) {
+  .container {
+    padding: var(--spacing-xl);
+  }
+
+  .content {
+    max-width: 540px;
+    gap: var(--spacing-2xl);
+  }
+
+  .logoText {
+    font-size: 3rem;
+  }
+
+  .tagline {
+    font-size: 1.125rem;
+  }
+
+  .footer {
+    font-size: 1rem;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .container {
+    justify-content: flex-start;
+    padding-top: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+
+  .logoText {
+    font-size: 1.5rem;
+  }
+
+  .tagline {
+    margin-top: 0;
+  }
+
+  .content {
+    gap: var(--spacing-md);
+  }
+
+  .footer {
+    margin-top: var(--spacing-md);
   }
 }

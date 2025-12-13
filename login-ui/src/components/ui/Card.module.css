@@ -3,6 +3,7 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+  width: 100%;
 }
 
 .cardHeader {
@@ -17,4 +18,63 @@
 .cardFooter {
   padding: var(--spacing-md) var(--spacing-xl) var(--spacing-xl);
   text-align: center;
+}
+
+/* ============================================
+   RESPONSIVE CARD STYLES
+   ============================================ */
+
+/* Extra small devices (phones in portrait) */
+@media (max-width: 480px) {
+  .card {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+  }
+
+  .cardHeader {
+    padding: var(--spacing-md) var(--spacing-md);
+  }
+
+  .cardContent {
+    padding: 0 var(--spacing-md) var(--spacing-md);
+  }
+
+  .cardFooter {
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  }
+}
+
+/* Small devices (phones in landscape, small tablets) */
+@media (min-width: 481px) and (max-width: 640px) {
+  .cardHeader {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .cardContent {
+    padding: 0 var(--spacing-lg) var(--spacing-md);
+  }
+
+  .cardFooter {
+    padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
+  }
+}
+
+/* VR-friendly large screens */
+@media (min-width: 1441px) {
+  .card {
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .cardHeader {
+    padding: var(--spacing-xl) var(--spacing-2xl);
+  }
+
+  .cardContent {
+    padding: 0 var(--spacing-2xl) var(--spacing-xl);
+  }
+
+  .cardFooter {
+    padding: var(--spacing-lg) var(--spacing-2xl) var(--spacing-2xl);
+  }
 }

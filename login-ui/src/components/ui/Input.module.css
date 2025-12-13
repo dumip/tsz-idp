@@ -21,6 +21,11 @@
   border-radius: var(--radius-lg);
   transition: all var(--transition-fast);
   min-height: 2.75rem;
+  /* Prevent iOS zoom on focus */
+  font-size: 16px;
+  /* Touch-friendly */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .input::placeholder {
@@ -60,4 +65,52 @@
 .helperText {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
+}
+
+/* ============================================
+   RESPONSIVE INPUT STYLES
+   ============================================ */
+
+/* Extra small devices (phones in portrait) */
+@media (max-width: 480px) {
+  .label {
+    font-size: 0.8125rem;
+  }
+
+  .input {
+    padding: var(--spacing-sm) var(--spacing-sm);
+    min-height: 2.75rem;
+    border-radius: var(--radius-md);
+  }
+
+  .error,
+  .helperText {
+    font-size: 0.75rem;
+  }
+}
+
+/* VR-friendly large touch targets */
+@media (min-width: 1441px) {
+  .label {
+    font-size: 1rem;
+  }
+
+  .input {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 1.125rem;
+    min-height: 3.5rem;
+    border-radius: var(--radius-xl);
+  }
+
+  .error,
+  .helperText {
+    font-size: 1rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .input {
+    min-height: 3rem;
+  }
 }

@@ -99,13 +99,125 @@
   color: var(--color-primary);
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
+/* ============================================
+   RESPONSIVE AUTH PAGE STYLES
+   ============================================ */
+
+/* Extra small devices (phones in portrait) */
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.375rem;
+  }
+
+  .subtitle {
+    font-size: 0.875rem;
+  }
+
+  .form {
+    gap: var(--spacing-sm);
+  }
+
+  .divider {
+    margin: var(--spacing-md) 0;
+    font-size: 0.8125rem;
+  }
+
+  .footerText {
+    font-size: 0.875rem;
+  }
+
+  .forgotPassword a {
+    font-size: 0.8125rem;
+  }
+
+  .codeInput {
+    font-size: 1.25rem;
+    letter-spacing: 0.2em;
+  }
+
+  .instructions {
+    font-size: 0.875rem;
+  }
+
+  .backLink {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Small devices (phones in landscape, small tablets) */
+@media (min-width: 481px) and (max-width: 640px) {
   .title {
     font-size: 1.5rem;
   }
 
   .form {
     gap: var(--spacing-sm);
+  }
+}
+
+/* VR-friendly large screens */
+@media (min-width: 1441px) {
+  .title {
+    font-size: 2.25rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .subtitle {
+    font-size: 1.125rem;
+  }
+
+  .form {
+    gap: var(--spacing-lg);
+  }
+
+  .divider {
+    margin: var(--spacing-xl) 0;
+    font-size: 1rem;
+  }
+
+  .footerText {
+    font-size: 1.125rem;
+  }
+
+  .forgotPassword a {
+    font-size: 1rem;
+  }
+
+  .codeInput {
+    font-size: 2rem;
+    letter-spacing: 0.3em;
+  }
+
+  .instructions {
+    font-size: 1.125rem;
+  }
+
+  .backLink {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .googleButton {
+    gap: var(--spacing-md);
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .title {
+    font-size: 1.25rem;
+    margin-bottom: 0;
+  }
+
+  .subtitle {
+    font-size: 0.8125rem;
+  }
+
+  .form {
+    gap: var(--spacing-xs);
+  }
+
+  .divider {
+    margin: var(--spacing-sm) 0;
   }
 }
