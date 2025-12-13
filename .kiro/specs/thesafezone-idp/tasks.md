@@ -24,6 +24,7 @@
   - [x] 1.5 Create User Pool App Clients for each client type
     - Create public client for web/mobile (PKCE required, no secret)
     - Create public client for VR (Device Code flow)
+    - Create public client for sample-client demo app
     - Configure scopes and callback URLs per client
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
   - [x] 1.6 Create DynamoDB table for Device Code storage
@@ -58,68 +59,46 @@
 - [x] 3. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Build React Login UI (Cognito redirects here during OIDC flow)
-  - [x] 4.1 Set up React project with routing and TheSafeZone styling
-    - Configure React with TypeScript
-    - Set up routes: /login, /signup, /forgot-password, /activate, /oauth2/callback
-    - Add AWS Amplify Auth or amazon-cognito-identity-js
-    - Handle OIDC parameters (client_id, redirect_uri, state, code_challenge) from Cognito redirect
-    - Configure TheSafeZone brand styling: fonts (Baloo Paaji 2, Montserrat), color palette, and visual identity from https://thesafezone.eu/
-    - _Requirements: 12.1, 12.4, 1.1_
-  - [x] 4.2 Implement login page
-    - Email/password form calling Cognito signIn()
-    - Google OAuth button redirecting to Cognito /oauth2/authorize
-    - Error handling with uniform messages (Cognito provides these)
-    - Apply TheSafeZone styling: rounded inputs, brand colors, consistent typography
-    - _Requirements: 12.2, 2.2, 3.1_
-  - [x] 4.3 Implement signup page
-    - Registration form calling Cognito signUp()
-    - Email verification code input calling confirmSignUp()
-    - Apply TheSafeZone styling consistent with login page
-    - _Requirements: 2.1, 12.2_
-  - [x] 4.4 Implement forgot password page
-    - Password reset request calling Cognito forgotPassword()
-    - Reset code and new password form calling forgotPasswordSubmit()
-    - Apply TheSafeZone styling consistent with login page
-    - _Requirements: 2.4, 12.2_
-  - [ ] 4.5 Implement device activation page (/activate)
-    - User code input form
-    - Login flow after code validation
-    - Call POST /device/authorize after successful login
-    - Success/error states
-    - Apply TheSafeZone styling consistent with login page
-    - _Requirements: 9.3, 12.2_
-  - [x] 4.6 Implement responsive design
-    - Mobile-friendly layouts
-    - VR-friendly large touch targets
-    - _Requirements: 12.4_
-  - [x] 4.7 Build sample client application
-    - Create a standalone demo app that initiates OIDC login flow (redirects to Login UI)
+- [x] 4. Configure Cognito Managed Login and build sample client
+  - [x] 4.1 Configure Cognito Managed Login branding
+    - Configure Cognito domain for /oauth2 endpoints
+    - Set up Managed Login UI customization (logo, colors) via AWS Console or CDK
+    - Ensure responsive design is handled by Cognito's built-in UI
+    - _Requirements: 12.1, 12.3, 12.4_
+  - [x] 4.2 Build sample client application
+    - Create a standalone demo app that initiates OIDC login flow
     - Implement PKCE utilities: code_verifier generation and code_challenge computation (S256)
+    - Redirect to Cognito /oauth2/authorize endpoint (Managed Login handles authentication)
     - After successful authentication, display user profile information (displayName, firstName, lastName, email, interests)
     - Display token information (access token expiry, ID token claims, refresh token status)
     - Include logout functionality
-    - Apply TheSafeZone styling consistent with Login UI
     - _Requirements: 1.1, 1.4, 10.4, 12.1_
-  - [ ] 4.8 Write property test for PKCE Validation
+  - [x] 4.3 Write property test for PKCE Validation
     - **Property 1: PKCE Validation**
     - **Validates: Requirements 1.1**
 
-- [ ] 5. Deploy infrastructure with CDK
-  - [ ] 5.1 Create CDK stack for Cognito resources
+- [ ] 5. Implement Device Activation Flow for VR
+  - [ ] 5.1 Create device activation web page
+    - Simple page at /activate that accepts user_code
+    - Validate user_code via API Gateway /device/authorize
+    - Redirect to Cognito /oauth2/authorize for authentication
+    - After auth, call /device/authorize to complete device authorization
+    - _Requirements: 9.3_
+
+- [ ] 6. Deploy infrastructure with CDK
+  - [ ] 6.1 Deploy Cognito resources
     - Deploy User Pool and Identity Pool
     - Configure Cognito domain for /oauth2 endpoints
-    - Configure User Pool to redirect to custom Login UI during authorization
-    - Set up callback URLs for Login UI to redirect back to Cognito
+    - Configure Managed Login branding
     - _Requirements: 1.4, 1.5, 12.1_
-  - [ ] 5.2 Create CDK stack for API Gateway and Device Code Lambda
+  - [ ] 6.2 Deploy API Gateway and Device Code Lambda
     - Deploy Device Code Lambda
     - Configure API Gateway routes for /device/code, /device/token, /device/authorize
     - _Requirements: 9.1_
-  - [ ] 5.3 Create CDK stack for React UI hosting
-    - Deploy S3 bucket for static assets
+  - [ ] 6.3 Deploy device activation page
+    - Deploy S3 bucket for static activation page
     - Configure CloudFront distribution
-    - _Requirements: 12.1_
+    - _Requirements: 9.3_
 
-- [ ] 6. Final Checkpoint - Ensure all tests pass
+- [ ] 7. Final Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.

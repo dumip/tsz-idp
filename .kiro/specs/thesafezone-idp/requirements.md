@@ -2,12 +2,12 @@
 
 ## Introduction
 
-This document specifies the requirements for TheSafeZone Identity Provider (IDP), an OAuth2/OpenID Connect compliant authentication system for the TheSafeZone Social VR platform. The IDP enables users to authenticate across multiple client applications (web, mobile, VR) using email/password credentials or federated social logins. The system supports anonymous authentication with persistent identities, progressive profiling, and account linking capabilities. Initial implementation uses AWS Cognito with architecture designed for future migration to on-premise solutions like Keycloak.
+This document specifies the requirements for TheSafeZone Identity Provider (IDP), an OAuth2/OpenID Connect compliant authentication system for the TheSafeZone Social VR platform. The IDP enables users to authenticate across multiple client applications (web, mobile, VR) using email/password credentials or federated social logins. The system supports anonymous authentication with persistent identities, progressive profiling, and account linking capabilities. The implementation uses AWS Cognito with Managed Login for the authentication UI, ensuring 100% OAuth2/OIDC compliance while allowing branding customization.
 
 ## Glossary
 
 - **IDP (Identity Provider)**: The authentication service that manages user identities and issues tokens
-- **TheSafeZone System**: The complete IDP implementation including Cognito, Lambda functions, and custom UI
+- **TheSafeZone System**: The complete IDP implementation including Cognito User Pool, Cognito Managed Login, Identity Pool, and Lambda functions
 - **User**: Any person interacting with TheSafeZone platform
 - **Anonymous User**: A user with a persistent device-bound identity who has not provided email/password credentials, implemented via Cognito Identity Pools
 - **Cognito Identity Pool**: AWS service providing temporary AWS credentials for unauthenticated (anonymous) and authenticated users
@@ -147,16 +147,16 @@ Note: Anonymous users do not have profile data. Profile attributes are only avai
 3. WHEN a user logs out THEN the TheSafeZone System SHALL revoke the refresh token and invalidate the session
 4. WHEN a token is validated THEN the TheSafeZone System SHALL verify signature, expiration, audience, and issuer claims
 
-### Requirement 12: Custom Login UI
+### Requirement 12: Managed Login UI
 
-**User Story:** As a product designer, I want a custom-branded login experience, so that users have a consistent TheSafeZone visual identity.
+**User Story:** As a product designer, I want a branded login experience using AWS Cognito Managed Login, so that users have a consistent experience while maintaining full OAuth2/OIDC compliance.
 
 #### Acceptance Criteria
 
-1. WHEN a user accesses the login page THEN the TheSafeZone System SHALL display a custom-built UI instead of Cognito Hosted UI
-2. WHEN the custom UI submits credentials THEN the TheSafeZone System SHALL authenticate via Cognito API (InitiateAuth, RespondToAuthChallenge)
-3. WHEN the UI flow requires customization THEN the TheSafeZone System SHALL support configuration changes without Cognito infrastructure modifications
-4. WHEN rendering the login UI THEN the TheSafeZone System SHALL support responsive design for web and mobile viewports
+1. WHEN a user accesses the login page THEN the TheSafeZone System SHALL display AWS Cognito Managed Login with TheSafeZone branding (logo, colors)
+2. WHEN the Managed Login UI submits credentials THEN the TheSafeZone System SHALL authenticate via standard Cognito OAuth2 endpoints
+3. WHEN branding customization is required THEN the TheSafeZone System SHALL configure Managed Login appearance via Cognito User Pool settings
+4. WHEN rendering the login UI THEN the TheSafeZone System SHALL leverage Cognito's built-in responsive design for web and mobile viewports
 
 ### Requirement 13: Security
 
