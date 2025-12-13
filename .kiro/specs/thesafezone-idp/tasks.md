@@ -72,7 +72,7 @@
     - Error handling with uniform messages (Cognito provides these)
     - Apply TheSafeZone styling: rounded inputs, brand colors, consistent typography
     - _Requirements: 12.2, 2.2, 3.1_
-  - [ ] 4.3 Implement signup page
+  - [x] 4.3 Implement signup page
     - Registration form calling Cognito signUp()
     - Email verification code input calling confirmSignUp()
     - Apply TheSafeZone styling consistent with login page

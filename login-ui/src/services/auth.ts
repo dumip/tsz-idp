@@ -7,7 +7,9 @@ import {
   CognitoUser,
   AuthenticationDetails,
   CognitoUserSession,
+  CognitoUserAttribute,
 } from 'amazon-cognito-identity-js';
+import type { ISignUpResult } from 'amazon-cognito-identity-js';
 import { cognitoConfig, getCognitoOAuthUrl } from '../config/cognito';
 import { getStoredOIDCParams, clearOIDCParams } from '../types/oauth';
 
@@ -72,6 +74,10 @@ const mapCognitoError = (error: Error & { code?: string }): AuthError => {
     LimitExceededException: 'Account temporarily locked. Please try again later.',
     InvalidParameterException: 'Invalid email or password format',
     NetworkError: 'Network error. Please check your connection.',
+    UsernameExistsException: 'An account with this email already exists',
+    InvalidPasswordException: 'Password does not meet requirements. Use at least 8 characters with uppercase, lowercase, numbers, and symbols.',
+    CodeMismatchException: 'Invalid verification code. Please try again.',
+    ExpiredCodeException: 'Verification code has expired. Please request a new one.',
   };
 
   return {
@@ -168,6 +174,9 @@ export const getGoogleOAuthUrl = (): string => {
 /**
  * Complete the OIDC flow by redirecting back to the client
  * Called after successful authentication
+ * 
+ * If OIDC params exist (user came from a client app), redirects to Cognito to complete the flow.
+ * If no OIDC params (direct navigation to login UI), redirects to a default success page.
  */
 export const completeOIDCFlow = (_tokens: AuthResult): void => {
   const oidcParams = getStoredOIDCParams();
@@ -194,6 +203,10 @@ export const completeOIDCFlow = (_tokens: AuthResult): void => {
 
     // Redirect to Cognito authorize endpoint to complete the flow
     window.location.href = getCognitoOAuthUrl(`/oauth2/authorize?${params.toString()}`);
+  } else {
+    // No OIDC params - user navigated directly to login UI
+    // Redirect to login page with success message
+    window.location.href = '/login?authenticated=true';
   }
 };
 
@@ -216,4 +229,120 @@ export const signOut = (): void => {
   if (user) {
     user.signOut();
   }
+};
+
+/**
+ * Sign up result containing user information
+ */
+export interface SignUpResult {
+  userSub: string;
+  userConfirmed: boolean;
+}
+
+/**
+ * Sign up a new user with email and password
+ * Implements Requirement 2.1: Create a new user account and send a verification email
+ */
+export const signUp = (email: string, password: string): Promise<SignUpResult> => {
+  return new Promise((resolve, reject) => {
+    let pool: CognitoUserPool;
+    try {
+      pool = getUserPool();
+    } catch (err) {
+      reject({
+        code: 'ConfigurationError',
+        message: (err as Error).message,
+      });
+      return;
+    }
+
+    const attributeList: CognitoUserAttribute[] = [
+      new CognitoUserAttribute({
+        Name: 'email',
+        Value: email,
+      }),
+    ];
+
+    pool.signUp(
+      email,
+      password,
+      attributeList,
+      [],
+      (err: Error | undefined, result: ISignUpResult | undefined) => {
+        if (err) {
+          reject(mapCognitoError(err as Error & { code?: string }));
+          return;
+        }
+        if (result) {
+          resolve({
+            userSub: result.userSub,
+            userConfirmed: result.userConfirmed,
+          });
+        }
+      }
+    );
+  });
+};
+
+/**
+ * Confirm sign up with verification code
+ * Implements Requirement 2.1: Verify email after registration
+ */
+export const confirmSignUp = (email: string, code: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    let pool: CognitoUserPool;
+    try {
+      pool = getUserPool();
+    } catch (err) {
+      reject({
+        code: 'ConfigurationError',
+        message: (err as Error).message,
+      });
+      return;
+    }
+
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: pool,
+    });
+
+    cognitoUser.confirmRegistration(code, true, (err: Error | undefined) => {
+      if (err) {
+        reject(mapCognitoError(err as Error & { code?: string }));
+        return;
+      }
+      resolve();
+    });
+  });
+};
+
+/**
+ * Resend confirmation code to user's email
+ */
+export const resendConfirmationCode = (email: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    let pool: CognitoUserPool;
+    try {
+      pool = getUserPool();
+    } catch (err) {
+      reject({
+        code: 'ConfigurationError',
+        message: (err as Error).message,
+      });
+      return;
+    }
+
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: pool,
+    });
+
+    cognitoUser.resendConfirmationCode((err: Error | undefined) => {
+      if (err) {
+        reject(mapCognitoError(err as Error & { code?: string }));
+        return;
+      }
+      resolve();
+    });
+  });
 };

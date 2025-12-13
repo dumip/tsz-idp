@@ -12,13 +12,20 @@ export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   // Parse and store OIDC params from Cognito redirect
+  // Also check for success message from signup/password reset
   React.useEffect(() => {
     const oidcParams = parseOIDCParams(searchParams);
     if (oidcParams) {
       storeOIDCParams(oidcParams);
+    }
+    
+    // Show success message if user just authenticated (from signup or direct login)
+    if (searchParams.get('authenticated') === 'true') {
+      setSuccess('You are now signed in! You can close this window or sign in again to continue.');
     }
   }, [searchParams]);
 
@@ -61,6 +68,11 @@ export const LoginPage: React.FC = () => {
           <p className={styles.subtitle}>Sign in to your account</p>
         </CardHeader>
         <CardContent>
+          {success && (
+            <Alert variant="success" className={styles.message}>
+              {success}
+            </Alert>
+          )}
           {error && (
             <Alert variant="error" className={styles.message}>
               {error}
