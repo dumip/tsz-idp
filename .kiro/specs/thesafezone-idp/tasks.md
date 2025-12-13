@@ -93,7 +93,7 @@
     - Mobile-friendly layouts
     - VR-friendly large touch targets
     - _Requirements: 12.4_
-  - [ ] 4.7 Build sample client application
+  - [x] 4.7 Build sample client application
     - Create a standalone demo app that initiates OIDC login flow (redirects to Login UI)
     - Implement PKCE utilities: code_verifier generation and code_challenge computation (S256)
     - After successful authentication, display user profile information (displayName, firstName, lastName, email, interests)

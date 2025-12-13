@@ -13,30 +13,41 @@ import type { ISignUpResult } from 'amazon-cognito-identity-js';
 import { cognitoConfig, getCognitoOAuthUrl } from '../config/cognito';
 import { getStoredOIDCParams, clearOIDCParams } from '../types/oauth';
 
-// Lazy-initialized Cognito User Pool to avoid errors when env vars aren't set
-let userPool: CognitoUserPool | null = null;
+// Cache for User Pool instances by client ID
+const userPoolCache = new Map<string, CognitoUserPool>();
 
 /**
- * Get or create the Cognito User Pool instance
- * Throws a user-friendly error if configuration is missing
+ * Get or create a Cognito User Pool instance for a specific client ID
+ * Uses the client_id from OIDC params if available, otherwise falls back to default
+ * 
+ * This ensures that when a client app (like sample-client) initiates login,
+ * the authentication happens with that client's ID, not the Login UI's ID.
  */
-const getUserPool = (): CognitoUserPool => {
-  if (userPool) {
-    return userPool;
-  }
+const getUserPool = (clientId?: string): CognitoUserPool => {
+  // Use provided clientId, or get from OIDC params, or fall back to default
+  const oidcParams = getStoredOIDCParams();
+  const effectiveClientId = clientId || oidcParams?.client_id || cognitoConfig.userPoolClientId;
 
-  if (!cognitoConfig.userPoolId || !cognitoConfig.userPoolClientId) {
+  if (!cognitoConfig.userPoolId || !effectiveClientId) {
     throw new Error(
       'Cognito configuration is missing. Please set VITE_COGNITO_USER_POOL_ID and VITE_COGNITO_CLIENT_ID environment variables.'
     );
   }
 
-  userPool = new CognitoUserPool({
+  // Check cache first
+  const cached = userPoolCache.get(effectiveClientId);
+  if (cached) {
+    return cached;
+  }
+
+  // Create new pool for this client ID
+  const pool = new CognitoUserPool({
     UserPoolId: cognitoConfig.userPoolId,
-    ClientId: cognitoConfig.userPoolClientId,
+    ClientId: effectiveClientId,
   });
 
-  return userPool;
+  userPoolCache.set(effectiveClientId, pool);
+  return pool;
 };
 
 /**

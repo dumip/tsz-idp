@@ -24,6 +24,7 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
   public readonly authenticatedRole: iam.Role;
   public readonly webMobileClient: cognito.UserPoolClient;
   public readonly vrClient: cognito.UserPoolClient;
+  public readonly sampleClient: cognito.UserPoolClient;
   public readonly deviceCodeTable: dynamodb.Table;
   public readonly deviceCodeLambda: lambda.Function;
   public readonly deviceCodeApi: apigateway.RestApi;
@@ -133,6 +134,8 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     const webLogoutUrls = this.node.tryGetContext('webLogoutUrls') || ['http://localhost:3000/logout'];
     const vrCallbackUrls = this.node.tryGetContext('vrCallbackUrls') || ['thesafezone://oauth2/callback'];
     const vrLogoutUrls = this.node.tryGetContext('vrLogoutUrls') || ['thesafezone://logout'];
+    const sampleClientCallbackUrls = this.node.tryGetContext('sampleClientCallbackUrls') || ['http://localhost:3001/callback'];
+    const sampleClientLogoutUrls = this.node.tryGetContext('sampleClientLogoutUrls') || ['http://localhost:3001'];
 
     // Create public client for web/mobile (PKCE required, no secret)
     // Requirements: 10.1, 10.2, 10.3, 10.4
@@ -193,6 +196,35 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       enableTokenRevocation: true,
     });
 
+    // Create public client for Sample Client demo app (PKCE required, no secret)
+    // This demonstrates a third-party client integrating with TheSafeZone IDP
+    this.sampleClient = this.userPool.addClient('SampleClient', {
+      userPoolClientName: 'thesafezone-sample-client',
+      generateSecret: false, // Public client - no secret
+      authFlows: {
+        userSrp: true,
+        userPassword: false,
+      },
+      oAuth: {
+        flows: {
+          authorizationCodeGrant: true,
+          implicitCodeGrant: false,
+        },
+        scopes: [
+          cognito.OAuthScope.OPENID,
+          cognito.OAuthScope.EMAIL,
+          cognito.OAuthScope.PROFILE,
+        ],
+        callbackUrls: sampleClientCallbackUrls,
+        logoutUrls: sampleClientLogoutUrls,
+      },
+      // Token validity (Requirement 11.1)
+      accessTokenValidity: cdk.Duration.hours(1),
+      idTokenValidity: cdk.Duration.hours(1),
+      refreshTokenValidity: cdk.Duration.days(30),
+      enableTokenRevocation: true,
+    });
+
     // Create Cognito Identity Pool for anonymous authentication (Requirement 4.1, 4.2)
     this.identityPool = new cognito.CfnIdentityPool(this, 'TheSafeZoneIdentityPool', {
       identityPoolName: 'thesafezone-identity-pool',
@@ -205,6 +237,10 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
         },
         {
           clientId: this.vrClient.userPoolClientId,
+          providerName: this.userPool.userPoolProviderName,
+        },
+        {
+          clientId: this.sampleClient.userPoolClientId,
           providerName: this.userPool.userPoolProviderName,
         },
       ],
@@ -286,6 +322,11 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'VRClientId', {
       value: this.vrClient.userPoolClientId,
       description: 'VR App Client ID',
+    });
+
+    new cdk.CfnOutput(this, 'SampleClientId', {
+      value: this.sampleClient.userPoolClientId,
+      description: 'Sample Client App Client ID (for testing OIDC flow)',
     });
 
     new cdk.CfnOutput(this, 'CognitoDomain', {

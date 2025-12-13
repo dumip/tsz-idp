@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/config/oauth.ts","./src/pages/callbackpage.tsx","./src/pages/homepage.tsx","./src/pages/profilepage.tsx","./src/pages/index.ts","./src/services/auth.ts","./src/test/setup.ts","./src/utils/pkce.test.ts","./src/utils/pkce.ts"],"version":"5.9.3"}
