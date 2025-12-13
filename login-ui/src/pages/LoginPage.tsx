@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '../components/layout';
-import { Card, CardHeader, CardContent, CardFooter, Input, Button } from '../components/ui';
+import { Card, CardHeader, CardContent, CardFooter, Input, Button, Alert } from '../components/ui';
 import { parseOIDCParams, storeOIDCParams } from '../types/oauth';
+import { signIn, getGoogleOAuthUrl, completeOIDCFlow } from '../services/auth';
+import type { AuthError } from '../services/auth';
 import styles from './AuthPages.module.css';
 
 export const LoginPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Parse and store OIDC params from Cognito redirect
   React.useEffect(() => {
@@ -16,6 +22,37 @@ export const LoginPage: React.FC = () => {
     }
   }, [searchParams]);
 
+  /**
+   * Handle email/password form submission
+   * Implements Requirement 2.2: Authenticate user and issue tokens within 3 seconds
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const tokens = await signIn(email, password);
+      // Complete the OIDC flow by redirecting back to Cognito
+      completeOIDCFlow(tokens);
+    } catch (err) {
+      const authError = err as AuthError;
+      // Display uniform error message (Requirement 2.3)
+      setError(authError.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handle Google OAuth button click
+   * Implements Requirement 3.1: Redirect to Google's OAuth2 authorization endpoint
+   */
+  const handleGoogleLogin = () => {
+    const googleUrl = getGoogleOAuthUrl();
+    window.location.href = googleUrl;
+  };
+
   return (
     <AuthLayout>
       <Card className={styles.authCard}>
@@ -24,13 +61,21 @@ export const LoginPage: React.FC = () => {
           <p className={styles.subtitle}>Sign in to your account</p>
         </CardHeader>
         <CardContent>
-          <form className={styles.form}>
+          {error && (
+            <Alert variant="error" className={styles.message}>
+              {error}
+            </Alert>
+          )}
+          <form className={styles.form} onSubmit={handleSubmit}>
             <Input
               label="Email"
               type="email"
               placeholder="Enter your email"
               autoComplete="email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
             />
             <Input
               label="Password"
@@ -38,18 +83,35 @@ export const LoginPage: React.FC = () => {
               placeholder="Enter your password"
               autoComplete="current-password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
             />
             <div className={styles.forgotPassword}>
               <Link to="/forgot-password">Forgot password?</Link>
             </div>
-            <Button type="submit" fullWidth size="lg">
+            <Button 
+              type="submit" 
+              fullWidth 
+              size="lg"
+              loading={isLoading}
+              disabled={isLoading}
+            >
               Sign In
             </Button>
           </form>
           <div className={styles.divider}>
             <span>or</span>
           </div>
-          <Button variant="outline" fullWidth size="lg" className={styles.googleButton}>
+          <Button 
+            variant="outline" 
+            fullWidth 
+            size="lg" 
+            className={styles.googleButton}
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            type="button"
+          >
             <GoogleIcon />
             Continue with Google
           </Button>

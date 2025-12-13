@@ -253,6 +253,15 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       },
     });
 
+    // Add Cognito domain for OAuth2 endpoints
+    // This creates the /oauth2/authorize, /oauth2/token endpoints
+    const domainPrefix = this.node.tryGetContext('cognitoDomainPrefix') || 'thesafezone-auth';
+    const userPoolDomain = this.userPool.addDomain('CognitoDomain', {
+      cognitoDomain: {
+        domainPrefix: domainPrefix,
+      },
+    });
+
     // Output the User Pool ID and ARN
     new cdk.CfnOutput(this, 'UserPoolId', {
       value: this.userPool.userPoolId,
@@ -277,6 +286,16 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'VRClientId', {
       value: this.vrClient.userPoolClientId,
       description: 'VR App Client ID',
+    });
+
+    new cdk.CfnOutput(this, 'CognitoDomain', {
+      value: userPoolDomain.domainName,
+      description: 'Cognito Domain (use for VITE_COGNITO_DOMAIN)',
+    });
+
+    new cdk.CfnOutput(this, 'CognitoDomainUrl', {
+      value: `https://${userPoolDomain.domainName}.auth.${this.region}.amazoncognito.com`,
+      description: 'Full Cognito Domain URL for OAuth2 endpoints',
     });
 
     // Create DynamoDB table for Device Code storage (Requirement 9.1, 9.2)

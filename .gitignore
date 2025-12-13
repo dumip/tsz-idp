@@ -5,3 +5,7 @@
 ._*
 .Spotlight-V100
 .Trashes
+
+
+# Local .env files should be ignored
+.env

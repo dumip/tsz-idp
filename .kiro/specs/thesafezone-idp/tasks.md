@@ -66,7 +66,7 @@
     - Handle OIDC parameters (client_id, redirect_uri, state, code_challenge) from Cognito redirect
     - Configure TheSafeZone brand styling: fonts (Baloo Paaji 2, Montserrat), color palette, and visual identity from https://thesafezone.eu/
     - _Requirements: 12.1, 12.4, 1.1_
-  - [ ] 4.2 Implement login page
+  - [x] 4.2 Implement login page
     - Email/password form calling Cognito signIn()
     - Google OAuth button redirecting to Cognito /oauth2/authorize
     - Error handling with uniform messages (Cognito provides these)
