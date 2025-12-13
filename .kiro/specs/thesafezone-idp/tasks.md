@@ -55,7 +55,7 @@
     - Update status to authorized
     - _Requirements: 9.3, 9.4_
 
-- [ ] 3. Checkpoint - Ensure all tests pass
+- [x] 3. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 4. Build React Login UI (Cognito redirects here during OIDC flow)

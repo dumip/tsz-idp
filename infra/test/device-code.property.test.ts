@@ -203,7 +203,7 @@ describe('Device Code Polling State Tests', () => {
         fc.property(
           deviceCodeRecordArb,
           fc.integer({ min: 0, max: 999999999 }), // currentTime before expiration
-          (baseRecord, timeOffset) => {
+          (baseRecord, _timeOffset) => {
             const record: MockDeviceCodeRecord = {
               ...baseRecord,
               status: 'pending',
