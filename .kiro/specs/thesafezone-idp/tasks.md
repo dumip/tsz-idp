@@ -77,7 +77,7 @@
     - Email verification code input calling confirmSignUp()
     - Apply TheSafeZone styling consistent with login page
     - _Requirements: 2.1, 12.2_
-  - [ ] 4.4 Implement forgot password page
+  - [x] 4.4 Implement forgot password page
     - Password reset request calling Cognito forgotPassword()
     - Reset code and new password form calling forgotPasswordSubmit()
     - Apply TheSafeZone styling consistent with login page

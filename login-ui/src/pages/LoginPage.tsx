@@ -27,6 +27,11 @@ export const LoginPage: React.FC = () => {
     if (searchParams.get('authenticated') === 'true') {
       setSuccess('You are now signed in! You can close this window or sign in again to continue.');
     }
+    
+    // Show success message after password reset
+    if (searchParams.get('reset') === 'success') {
+      setSuccess('Password reset successful! Please sign in with your new password.');
+    }
   }, [searchParams]);
 
   /**

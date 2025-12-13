@@ -346,3 +346,73 @@ export const resendConfirmationCode = (email: string): Promise<void> => {
     });
   });
 };
+
+/**
+ * Initiate forgot password flow
+ * Implements Requirement 2.4: Send a reset link to the registered email address
+ */
+export const forgotPassword = (email: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    let pool: CognitoUserPool;
+    try {
+      pool = getUserPool();
+    } catch (err) {
+      reject({
+        code: 'ConfigurationError',
+        message: (err as Error).message,
+      });
+      return;
+    }
+
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: pool,
+    });
+
+    cognitoUser.forgotPassword({
+      onSuccess: () => {
+        resolve();
+      },
+      onFailure: (err: Error) => {
+        reject(mapCognitoError(err as Error & { code?: string }));
+      },
+    });
+  });
+};
+
+/**
+ * Complete forgot password flow with verification code and new password
+ * Implements Requirement 2.4: Complete password reset
+ */
+export const forgotPasswordSubmit = (
+  email: string,
+  code: string,
+  newPassword: string
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    let pool: CognitoUserPool;
+    try {
+      pool = getUserPool();
+    } catch (err) {
+      reject({
+        code: 'ConfigurationError',
+        message: (err as Error).message,
+      });
+      return;
+    }
+
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: pool,
+    });
+
+    cognitoUser.confirmPassword(code, newPassword, {
+      onSuccess: () => {
+        resolve();
+      },
+      onFailure: (err: Error) => {
+        reject(mapCognitoError(err as Error & { code?: string }));
+      },
+    });
+  });
+};
