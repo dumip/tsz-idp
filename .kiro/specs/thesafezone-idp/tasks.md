@@ -32,24 +32,24 @@
     - Configure TTL on ttl attribute
     - _Requirements: 9.1, 9.2_
 
-- [ ] 2. Implement Device Code Lambda (RFC 8628)
-  - [ ] 2.1 Implement POST /device/code endpoint
+- [x] 2. Implement Device Code Lambda (RFC 8628)
+  - [x] 2.1 Implement POST /device/code endpoint
     - Generate unique device_code and user_code
     - Store in DynamoDB with 10-minute expiration
     - Return verification_uri and polling interval
     - _Requirements: 9.1, 9.2_
-  - [ ] 2.2 Write property test for Device Code Format and Expiration
+  - [x] 2.2 Write property test for Device Code Format and Expiration
     - **Property 15: Device Code Format and Expiration**
     - **Validates: Requirements 9.1, 9.2**
-  - [ ] 2.3 Implement POST /device/token endpoint (polling)
+  - [x] 2.3 Implement POST /device/token endpoint (polling)
     - Return authorization_pending for pending codes
     - Return tokens for authorized codes
     - Return expired_token for expired codes
     - _Requirements: 9.4, 9.5_
-  - [ ] 2.4 Write property test for Device Code Polling States
+  - [x] 2.4 Write property test for Device Code Polling States
     - **Property 16: Device Code Polling States**
     - **Validates: Requirements 9.4, 9.5**
-  - [ ] 2.5 Implement POST /device/authorize endpoint
+  - [x] 2.5 Implement POST /device/authorize endpoint
     - Validate user authentication via access token
     - Store tokens in DynamoDB record
     - Update status to authorized

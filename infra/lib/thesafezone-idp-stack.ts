@@ -2,6 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as path from 'path';
 import { Construct } from 'constructs';
 
 /**
@@ -22,6 +25,8 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
   public readonly webMobileClient: cognito.UserPoolClient;
   public readonly vrClient: cognito.UserPoolClient;
   public readonly deviceCodeTable: dynamodb.Table;
+  public readonly deviceCodeLambda: lambda.Function;
+  public readonly deviceCodeApi: apigateway.RestApi;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -307,6 +312,70 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'DeviceCodeTableArn', {
       value: this.deviceCodeTable.tableArn,
       description: 'DynamoDB table ARN for Device Codes',
+    });
+
+    // Get verification URI from context or use default
+    const verificationUri = this.node.tryGetContext('verificationUri') || 'https://thesafezone.eu/activate';
+
+    // Create Device Code Lambda function (Requirements: 9.1, 9.2, 9.3, 9.4, 9.5)
+    this.deviceCodeLambda = new lambda.Function(this, 'DeviceCodeLambda', {
+      functionName: 'thesafezone-device-code',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, 'lambda/device-code')),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        DEVICE_CODE_TABLE_NAME: this.deviceCodeTable.tableName,
+        VERIFICATION_URI: verificationUri,
+        USER_POOL_ID: this.userPool.userPoolId,
+        USER_POOL_CLIENT_ID: this.vrClient.userPoolClientId,
+      },
+    });
+
+    // Grant Lambda permissions to access DynamoDB
+    this.deviceCodeTable.grantReadWriteData(this.deviceCodeLambda);
+
+    // Create API Gateway for Device Code endpoints
+    this.deviceCodeApi = new apigateway.RestApi(this, 'DeviceCodeApi', {
+      restApiName: 'TheSafeZone Device Code API',
+      description: 'API for Device Code Flow (RFC 8628)',
+      deployOptions: {
+        stageName: 'v1',
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: ['POST', 'OPTIONS'],
+        allowHeaders: ['Content-Type', 'Authorization'],
+      },
+    });
+
+    // Create /device resource
+    const deviceResource = this.deviceCodeApi.root.addResource('device');
+
+    // Create Lambda integration
+    const deviceCodeIntegration = new apigateway.LambdaIntegration(this.deviceCodeLambda);
+
+    // POST /device/code - Generate device code
+    const codeResource = deviceResource.addResource('code');
+    codeResource.addMethod('POST', deviceCodeIntegration);
+
+    // POST /device/token - Poll for tokens
+    const tokenResource = deviceResource.addResource('token');
+    tokenResource.addMethod('POST', deviceCodeIntegration);
+
+    // POST /device/authorize - User authorizes device
+    const authorizeResource = deviceResource.addResource('authorize');
+    authorizeResource.addMethod('POST', deviceCodeIntegration);
+
+    new cdk.CfnOutput(this, 'DeviceCodeApiUrl', {
+      value: this.deviceCodeApi.url,
+      description: 'Device Code API URL',
+    });
+
+    new cdk.CfnOutput(this, 'DeviceCodeLambdaArn', {
+      value: this.deviceCodeLambda.functionArn,
+      description: 'Device Code Lambda ARN',
     });
   }
 }
