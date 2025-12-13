@@ -1,0 +1,35 @@
+{
+  "name": "thesafezone-idp-infra",
+  "version": "1.0.0",
+  "description": "TheSafeZone Identity Provider CDK Infrastructure",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "cdk": "cdk",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "aws-cdk": "^2.170.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.4.5"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.3.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.700.0",
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "aws-jwt-verify": "^4.0.1",
+    "fast-check": "^3.23.0"
+  }
+}
