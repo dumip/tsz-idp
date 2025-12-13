@@ -157,21 +157,6 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       refreshTokenValidity: cdk.Duration.days(30),
       // Prevent token revocation issues
       enableTokenRevocation: true,
-      // Read/write attributes
-      readAttributes: new cognito.ClientAttributes()
-        .withStandardAttributes({
-          email: true,
-          emailVerified: true,
-          givenName: true,
-          familyName: true,
-        })
-        .withCustomAttributes('displayName', 'firstName', 'lastName', 'interests'),
-      writeAttributes: new cognito.ClientAttributes()
-        .withStandardAttributes({
-          givenName: true,
-          familyName: true,
-        })
-        .withCustomAttributes('displayName', 'firstName', 'lastName', 'interests'),
     });
 
     // Create public client for VR (Device Code flow)
@@ -201,21 +186,6 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       idTokenValidity: cdk.Duration.hours(1),
       refreshTokenValidity: cdk.Duration.days(30),
       enableTokenRevocation: true,
-      // Read/write attributes
-      readAttributes: new cognito.ClientAttributes()
-        .withStandardAttributes({
-          email: true,
-          emailVerified: true,
-          givenName: true,
-          familyName: true,
-        })
-        .withCustomAttributes('displayName', 'firstName', 'lastName', 'interests'),
-      writeAttributes: new cognito.ClientAttributes()
-        .withStandardAttributes({
-          givenName: true,
-          familyName: true,
-        })
-        .withCustomAttributes('displayName', 'firstName', 'lastName', 'interests'),
     });
 
     // Create Cognito Identity Pool for anonymous authentication (Requirement 4.1, 4.2)
