@@ -5,6 +5,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as path from 'path';
+import * as fs from 'fs';
 import { Construct } from 'constructs';
 
 /**
@@ -296,6 +297,70 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       cognitoDomain: {
         domainPrefix: domainPrefix,
       },
+      // Use Managed Login instead of classic Hosted UI
+      managedLoginVersion: cognito.ManagedLoginVersion.NEWER_MANAGED_LOGIN,
+    });
+
+    // Configure Managed Login branding with TheSafeZone styling
+    // Requirements: 12.1, 12.3
+    // Uses CfnManagedLoginBranding for the new Managed Login experience
+    const managedLoginSettings = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, 'cognito-ui/managed-login-settings.json'),
+        'utf-8'
+      )
+    );
+
+    // Read logo as base64
+    const logoBase64 = fs.readFileSync(
+      path.join(__dirname, 'cognito-ui/logo.png')
+    ).toString('base64');
+
+    // Apply branding to the web/mobile client
+    // Valid category values: FAVICON_ICO, FAVICON_SVG, EMAIL_GRAPHIC, SMS_GRAPHIC,
+    // AUTH_APP_GRAPHIC, PASSWORD_GRAPHIC, PASSKEY_GRAPHIC, PAGE_HEADER_LOGO,
+    // PAGE_HEADER_BACKGROUND, PAGE_FOOTER_LOGO, PAGE_FOOTER_BACKGROUND,
+    // PAGE_BACKGROUND, FORM_BACKGROUND, FORM_LOGO, IDP_BUTTON_ICON
+    // Note: FAVICON_ICO requires .ico format with 1:1 aspect ratio
+    new cognito.CfnManagedLoginBranding(this, 'ManagedLoginBranding', {
+      userPoolId: this.userPool.userPoolId,
+      clientId: this.webMobileClient.userPoolClientId,
+      settings: managedLoginSettings,
+      assets: [
+        {
+          category: 'FORM_LOGO',
+          colorMode: 'LIGHT',
+          extension: 'PNG',
+          bytes: logoBase64,
+        },
+        {
+          category: 'FORM_LOGO',
+          colorMode: 'DARK',
+          extension: 'PNG',
+          bytes: logoBase64,
+        },
+      ],
+    });
+
+    // Apply same branding to sample client
+    new cognito.CfnManagedLoginBranding(this, 'SampleClientBranding', {
+      userPoolId: this.userPool.userPoolId,
+      clientId: this.sampleClient.userPoolClientId,
+      settings: managedLoginSettings,
+      assets: [
+        {
+          category: 'FORM_LOGO',
+          colorMode: 'LIGHT',
+          extension: 'PNG',
+          bytes: logoBase64,
+        },
+        {
+          category: 'FORM_LOGO',
+          colorMode: 'DARK',
+          extension: 'PNG',
+          bytes: logoBase64,
+        },
+      ],
     });
 
     // Output the User Pool ID and ARN
