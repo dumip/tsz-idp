@@ -1,0 +1,66 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.content {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xl);
+}
+
+.logo {
+  text-align: center;
+  color: var(--color-text-on-primary);
+}
+
+.logoText {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tagline {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: var(--spacing-xs);
+}
+
+.footer {
+  margin-top: var(--spacing-xl);
+  color: var(--color-text-on-primary);
+  opacity: 0.7;
+  font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding: var(--spacing-sm);
+  }
+
+  .logoText {
+    font-size: 2rem;
+  }
+
+  .content {
+    gap: var(--spacing-lg);
+  }
+}
+
+/* VR-friendly large touch targets */
+@media (min-width: 1024px) {
+  .content {
+    max-width: 480px;
+  }
+}

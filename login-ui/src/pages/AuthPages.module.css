@@ -1,0 +1,111 @@
+.authCard {
+  width: 100%;
+}
+
+.title {
+  font-size: 1.75rem;
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.forgotPassword {
+  text-align: right;
+  margin-top: calc(-1 * var(--spacing-sm));
+}
+
+.forgotPassword a {
+  font-size: 0.875rem;
+  color: var(--color-primary);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+.googleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.footerText {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.footerText a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Success/Error messages */
+.message {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Code input for device activation */
+.codeInput {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+/* Instructions text */
+.instructions {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Back link */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.backLink:hover {
+  color: var(--color-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .form {
+    gap: var(--spacing-sm);
+  }
+}

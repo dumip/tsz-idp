@@ -1,0 +1,143 @@
+/* TheSafeZone Login UI - Global Styles */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Paaji+2:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* CSS Reset and Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Primary brand colors */
+  --color-primary: #6C63FF;
+  --color-primary-dark: #5A52D5;
+  --color-primary-light: #8B84FF;
+  
+  /* Secondary colors */
+  --color-secondary: #FF6B6B;
+  --color-secondary-dark: #E55A5A;
+  
+  /* Neutral colors */
+  --color-background: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F0F0F5;
+  
+  /* Text colors */
+  --color-text-primary: #2D3748;
+  --color-text-secondary: #718096;
+  --color-text-muted: #A0AEC0;
+  --color-text-on-primary: #FFFFFF;
+  
+  /* Status colors */
+  --color-success: #48BB78;
+  --color-error: #E53E3E;
+  --color-warning: #ECC94B;
+  --color-info: #4299E1;
+  
+  /* Border colors */
+  --color-border: #E2E8F0;
+  --color-border-focus: #6C63FF;
+  
+  /* Fonts */
+  --font-heading: 'Baloo Paaji 2', cursive;
+  --font-body: 'Montserrat', sans-serif;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+input, textarea, select {
+  font-family: var(--font-body);
+  font-size: 1rem;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Utility classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Root container */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

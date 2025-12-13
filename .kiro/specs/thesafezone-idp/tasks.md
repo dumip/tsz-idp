@@ -59,7 +59,7 @@
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 4. Build React Login UI (Cognito redirects here during OIDC flow)
-  - [ ] 4.1 Set up React project with routing and TheSafeZone styling
+  - [x] 4.1 Set up React project with routing and TheSafeZone styling
     - Configure React with TypeScript
     - Set up routes: /login, /signup, /forgot-password, /activate, /oauth2/callback
     - Add AWS Amplify Auth or amazon-cognito-identity-js
