@@ -1,35 +1,33 @@
 # tsz-idp
 
-TheSafeZone Identity Provider - OAuth2/OIDC authentication system built on AWS Cognito.
+TheSafeZone Identity Provider - OAuth2/OIDC on AWS Cognito.
 
-## Prerequisites
-
-- Node.js 18+
-- AWS CLI configured with credentials
-- AWS CDK CLI: `npm install -g aws-cdk`
-
-## Build & Deploy
+## Deploy
 
 ```bash
-cd infra
-npm install
-npm run build
-npm test
+# Install
+cd infra && npm install
+cd ../login-ui && npm install
+cd ../sample-client && npm install
 
-# Bootstrap CDK (first time only)
+# Bootstrap (first time only)
+cd ../infra
 cdk bootstrap
 
 # Deploy
-cdk deploy
+npm run deploy                # Creates Cognito, CloudFront
+npm run build:sample-client   # Builds sample client with prod config
+npm run deploy                # Uploads sample client to S3
+```
 
-# With Google OAuth (optional)
+With Google OAuth:
+```bash
 cdk deploy -c googleClientId=YOUR_ID -c googleClientSecret=YOUR_SECRET
 ```
 
-## Useful Commands
+## Outputs
 
-```bash
-cdk diff      # Preview changes
-cdk synth     # Generate CloudFormation template
-cdk destroy   # Remove all resources
-```
+After deploy, check `cdk-outputs.json` for:
+- `SampleClientUrl` - Demo app URL
+- `LoginUiUrl` - Device activation page
+- `CognitoDomain` - OAuth2 endpoints

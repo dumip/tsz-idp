@@ -100,5 +100,26 @@
     - Configure CloudFront distribution
     - _Requirements: 9.3_
 
-- [x] 7. Final Checkpoint - Ensure all tests pass
+- [ ] 7. Deploy Sample Client Application
+  - [x] 7.1 Create S3 bucket and CloudFront distribution for sample client
+    - Create S3 bucket for static hosting with private access
+    - Create CloudFront distribution with Origin Access Control
+    - Configure HTTPS with CloudFront default certificate
+    - Set up proper cache behaviors for static assets
+    - _Requirements: 15.1_
+  - [x] 7.2 Configure sample client build with Cognito endpoints
+    - Update sample client environment variables with deployed Cognito domain and client ID
+    - Configure redirect URIs to use CloudFront distribution URL
+    - Build sample client with production configuration
+    - _Requirements: 15.2_
+  - [ ] 7.3 Deploy sample client assets to S3
+    - Upload built assets to S3 bucket
+    - Configure CloudFront cache invalidation for updates
+    - _Requirements: 15.4_
+  - [x] 7.4 Update Cognito App Client with sample client callback URLs
+    - Add CloudFront distribution URL to allowed callback URLs
+    - Add CloudFront distribution URL to allowed logout URLs
+    - _Requirements: 15.3_
+
+- [ ] 8. Final Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.

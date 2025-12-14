@@ -10,7 +10,10 @@
     "test:watch": "jest --watch",
     "cdk": "cdk",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "build:sample-client": "npx ts-node scripts/build-sample-client.ts",
+    "deploy": "cdk deploy --outputs-file cdk-outputs.json",
+    "deploy:all": "npm run deploy && npm run build:sample-client && npm run deploy"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.159",

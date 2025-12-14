@@ -179,3 +179,14 @@ Note: Anonymous users do not have profile data. Profile attributes are only avai
 2. WHEN a developer implements Device Code Flow THEN the TheSafeZone System SHALL provide step-by-step integration guide with code examples
 3. WHEN a developer registers a client application THEN the TheSafeZone System SHALL provide documentation for client registration and configuration
 4. WHEN API changes are deployed THEN the TheSafeZone System SHALL update documentation before or concurrent with the release
+
+### Requirement 15: Sample Client Deployment
+
+**User Story:** As a developer or stakeholder, I want the sample client application deployed and publicly accessible, so that I can demonstrate how the IDP works and test the authentication flows.
+
+#### Acceptance Criteria
+
+1. WHEN a user visits the sample client URL THEN the TheSafeZone System SHALL serve the sample client application via HTTPS
+2. WHEN the sample client is deployed THEN the TheSafeZone System SHALL configure the application with the correct Cognito endpoints and client credentials
+3. WHEN a user initiates login from the sample client THEN the TheSafeZone System SHALL redirect to Cognito Managed Login and return tokens upon successful authentication
+4. WHEN the sample client is updated THEN the TheSafeZone System SHALL deploy the new version without manual intervention via CDK

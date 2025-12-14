@@ -27,3 +27,6 @@ coverage/
 # Environment
 .env
 .env.local
+
+# CDK outputs (contains deployment-specific values)
+cdk-outputs.json

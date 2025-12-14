@@ -499,6 +499,60 @@ Based on the acceptance criteria analysis, the following correctness properties 
 *For any* user, exactly 5 consecutive failed login attempts SHALL trigger account lockout; fewer than 5 failures SHALL NOT trigger lockout.
 **Validates: Requirements 13.1**
 
+### Property 26: Sample Client HTTPS Accessibility
+*For any* request to the sample client URL, the response SHALL be served over HTTPS with valid TLS certificate.
+**Validates: Requirements 15.1**
+
+### Property 27: Sample Client Authentication Flow
+*For any* login attempt from the sample client, the system SHALL redirect to Cognito Managed Login and return valid tokens upon successful authentication.
+**Validates: Requirements 15.3**
+
+## Sample Client Deployment Architecture
+
+The sample client is deployed as a static web application to demonstrate the IDP authentication flows.
+
+```mermaid
+graph TB
+    subgraph "Sample Client Deployment"
+        CF[CloudFront Distribution]
+        S3[S3 Bucket<br/>Static Assets]
+        OAC[Origin Access Control]
+    end
+
+    subgraph "Build Process"
+        VITE[Vite Build]
+        ENV[Environment Variables<br/>Injected at Build]
+    end
+
+    USER[User Browser] -->|HTTPS| CF
+    CF -->|OAC| S3
+    VITE -->|npm run build| S3
+    ENV -->|VITE_* vars| VITE
+```
+
+### Deployment Components
+
+| Component | Purpose |
+|-----------|---------|
+| S3 Bucket | Hosts built static assets (HTML, JS, CSS) |
+| CloudFront Distribution | CDN with HTTPS, caching, and custom domain support |
+| Origin Access Control | Secures S3 bucket access to CloudFront only |
+| Build-time Environment | Injects Cognito endpoints and client ID during build |
+
+### Environment Configuration
+
+The sample client requires these environment variables at build time:
+
+```typescript
+interface SampleClientConfig {
+  VITE_COGNITO_DOMAIN: string;      // e.g., "thesafezone.auth.eu-west-1.amazoncognito.com"
+  VITE_CLIENT_ID: string;           // Cognito App Client ID
+  VITE_REDIRECT_URI: string;        // CloudFront URL + /callback
+  VITE_LOGOUT_URI: string;          // CloudFront URL
+  VITE_SCOPES: string;              // "openid email profile"
+}
+```
+
 ## Error Handling
 
 ### Authentication Errors

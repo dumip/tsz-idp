@@ -35,6 +35,8 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
   public readonly deviceCodeApi: apigateway.RestApi;
   public readonly loginUiBucket: s3.Bucket;
   public readonly loginUiDistribution: cloudfront.Distribution;
+  public readonly sampleClientBucket: s3.Bucket;
+  public readonly sampleClientDistribution: cloudfront.Distribution;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -585,5 +587,100 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       value: `https://${this.loginUiDistribution.distributionDomainName}/activate`,
       description: 'Device Activation Page URL',
     });
+
+    // ============================================================
+    // Sample Client Deployment (Requirement 15.1, 15.2, 15.3, 15.4)
+    // ============================================================
+
+    // Create S3 bucket for Sample Client static hosting
+    this.sampleClientBucket = new s3.Bucket(this, 'SampleClientBucket', {
+      bucketName: `thesafezone-sample-client-${this.account}-${this.region}`,
+      // Block all public access - CloudFront will access via OAC
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      // Enable versioning for rollback capability
+      versioned: true,
+      // Removal policy for development (change to RETAIN for production)
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+      // Enable encryption
+      encryption: s3.BucketEncryption.S3_MANAGED,
+    });
+
+    // Create CloudFront distribution for Sample Client
+    this.sampleClientDistribution = new cloudfront.Distribution(this, 'SampleClientDistribution', {
+      comment: 'TheSafeZone Sample Client - OIDC Demo Application',
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(this.sampleClientBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        compress: true,
+      },
+      // SPA routing - return index.html for all 404s
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+      ],
+      defaultRootObject: 'index.html',
+      // Enable HTTP/2 and HTTP/3 for better performance
+      httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
+      // Price class - use all edge locations for global coverage
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+    });
+
+    // Deploy Sample Client static files to S3 (if dist folder exists)
+    const sampleClientDistPath = path.join(__dirname, '../../sample-client/dist');
+    if (fs.existsSync(sampleClientDistPath)) {
+      new s3deploy.BucketDeployment(this, 'SampleClientDeployment', {
+        sources: [s3deploy.Source.asset(sampleClientDistPath)],
+        destinationBucket: this.sampleClientBucket,
+        distribution: this.sampleClientDistribution,
+        distributionPaths: ['/*'],
+      });
+    }
+
+    new cdk.CfnOutput(this, 'SampleClientBucketName', {
+      value: this.sampleClientBucket.bucketName,
+      description: 'S3 bucket name for Sample Client',
+    });
+
+    new cdk.CfnOutput(this, 'SampleClientDistributionId', {
+      value: this.sampleClientDistribution.distributionId,
+      description: 'CloudFront distribution ID for Sample Client',
+    });
+
+    new cdk.CfnOutput(this, 'SampleClientUrl', {
+      value: `https://${this.sampleClientDistribution.distributionDomainName}`,
+      description: 'Sample Client URL (CloudFront) - Use this to test OIDC flow',
+    });
+
+    // ============================================================
+    // Update Sample Client callback URLs with CloudFront domain
+    // (Requirement 15.3 - redirect mismatch fix)
+    // ============================================================
+    
+    // Get the underlying CfnUserPoolClient to update callback URLs
+    const cfnSampleClient = this.sampleClient.node.defaultChild as cognito.CfnUserPoolClient;
+    
+    // Add CloudFront URLs to the callback and logout URLs
+    // This includes both localhost (for dev) and CloudFront (for prod)
+    cfnSampleClient.callbackUrLs = [
+      'http://localhost:3001/callback',
+      `https://${this.sampleClientDistribution.distributionDomainName}/callback`,
+    ];
+    cfnSampleClient.logoutUrLs = [
+      'http://localhost:3001',
+      `https://${this.sampleClientDistribution.distributionDomainName}`,
+    ];
   }
 }
