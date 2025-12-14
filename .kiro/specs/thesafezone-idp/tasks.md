@@ -77,8 +77,8 @@
     - **Property 1: PKCE Validation**
     - **Validates: Requirements 1.1**
 
-- [ ] 5. Implement Device Activation Flow for VR
-  - [ ] 5.1 Create device activation web page
+- [x] 5. Implement Device Activation Flow for VR
+  - [x] 5.1 Create device activation web page
     - Simple page at /activate that accepts user_code
     - Validate user_code via API Gateway /device/authorize
     - Redirect to Cognito /oauth2/authorize for authentication

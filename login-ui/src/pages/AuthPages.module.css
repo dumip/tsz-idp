@@ -19,50 +19,6 @@
   gap: var(--spacing-md);
 }
 
-.forgotPassword {
-  text-align: right;
-  margin-top: calc(-1 * var(--spacing-sm));
-}
-
-.forgotPassword a {
-  font-size: 0.875rem;
-  color: var(--color-primary);
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  margin: var(--spacing-lg) 0;
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background-color: var(--color-border);
-}
-
-.googleButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-}
-
-.footerText {
-  color: var(--color-text-secondary);
-  font-size: 0.9375rem;
-}
-
-.footerText a {
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
 /* Success/Error messages */
 .message {
   margin-bottom: var(--spacing-md);
@@ -85,22 +41,8 @@
   margin-bottom: var(--spacing-md);
 }
 
-/* Back link */
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  margin-bottom: var(--spacing-md);
-}
-
-.backLink:hover {
-  color: var(--color-primary);
-}
-
 /* ============================================
-   RESPONSIVE AUTH PAGE STYLES
+   RESPONSIVE STYLES
    ============================================ */
 
 /* Extra small devices (phones in portrait) */
@@ -117,19 +59,6 @@
     gap: var(--spacing-sm);
   }
 
-  .divider {
-    margin: var(--spacing-md) 0;
-    font-size: 0.8125rem;
-  }
-
-  .footerText {
-    font-size: 0.875rem;
-  }
-
-  .forgotPassword a {
-    font-size: 0.8125rem;
-  }
-
   .codeInput {
     font-size: 1.25rem;
     letter-spacing: 0.2em;
@@ -137,10 +66,6 @@
 
   .instructions {
     font-size: 0.875rem;
-  }
-
-  .backLink {
-    font-size: 0.8125rem;
   }
 }
 
@@ -170,19 +95,6 @@
     gap: var(--spacing-lg);
   }
 
-  .divider {
-    margin: var(--spacing-xl) 0;
-    font-size: 1rem;
-  }
-
-  .footerText {
-    font-size: 1.125rem;
-  }
-
-  .forgotPassword a {
-    font-size: 1rem;
-  }
-
   .codeInput {
     font-size: 2rem;
     letter-spacing: 0.3em;
@@ -190,15 +102,6 @@
 
   .instructions {
     font-size: 1.125rem;
-  }
-
-  .backLink {
-    font-size: 1rem;
-    margin-bottom: var(--spacing-lg);
-  }
-
-  .googleButton {
-    gap: var(--spacing-md);
   }
 }
 
@@ -215,9 +118,5 @@
 
   .form {
     gap: var(--spacing-xs);
-  }
-
-  .divider {
-    margin: var(--spacing-sm) 0;
   }
 }
