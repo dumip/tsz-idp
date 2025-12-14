@@ -15,7 +15,8 @@ export const cognitoConfig = {
   
   // OAuth configuration
   oauth: {
-    scope: ['openid', 'email', 'profile'],
+    // aws.cognito.signin.user.admin is required for UpdateUserAttributes API
+    scope: ['openid', 'email', 'profile', 'aws.cognito.signin.user.admin'],
     responseType: 'code',
   },
 };

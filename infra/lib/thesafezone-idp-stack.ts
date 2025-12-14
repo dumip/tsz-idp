@@ -139,12 +139,29 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     }
 
     // Get callback URLs from context or use defaults
-    const webCallbackUrls = this.node.tryGetContext('webCallbackUrls') || ['http://localhost:3000/oauth2/callback'];
-    const webLogoutUrls = this.node.tryGetContext('webLogoutUrls') || ['http://localhost:3000/logout'];
+    // Includes /activate for device flow and /profile/callback for profile management
+    const webCallbackUrls = this.node.tryGetContext('webCallbackUrls') || [
+      'http://localhost:3000/oauth2/callback',
+      'http://localhost:3000/activate',
+      'http://localhost:3000/profile/callback',
+      'http://localhost:5173/activate',
+      'http://localhost:5173/profile/callback',
+    ];
+    const webLogoutUrls = this.node.tryGetContext('webLogoutUrls') || [
+      'http://localhost:3000',
+      'http://localhost:3000/logout',
+      'http://localhost:5173',
+    ];
     const vrCallbackUrls = this.node.tryGetContext('vrCallbackUrls') || ['thesafezone://oauth2/callback'];
     const vrLogoutUrls = this.node.tryGetContext('vrLogoutUrls') || ['thesafezone://logout'];
-    const sampleClientCallbackUrls = this.node.tryGetContext('sampleClientCallbackUrls') || ['http://localhost:3001/callback'];
-    const sampleClientLogoutUrls = this.node.tryGetContext('sampleClientLogoutUrls') || ['http://localhost:3001'];
+    const sampleClientCallbackUrls = this.node.tryGetContext('sampleClientCallbackUrls') || [
+      'http://localhost:3001/callback',
+      'http://localhost:5174/callback',
+    ];
+    const sampleClientLogoutUrls = this.node.tryGetContext('sampleClientLogoutUrls') || [
+      'http://localhost:3001',
+      'http://localhost:5174',
+    ];
 
     // Create public client for web/mobile (PKCE required, no secret)
     // Requirements: 10.1, 10.2, 10.3, 10.4
@@ -164,6 +181,7 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
           cognito.OAuthScope.OPENID,
           cognito.OAuthScope.EMAIL,
           cognito.OAuthScope.PROFILE,
+          cognito.OAuthScope.COGNITO_ADMIN, // Required for UpdateUserAttributes API
         ],
         callbackUrls: webCallbackUrls,
         logoutUrls: webLogoutUrls,
@@ -676,11 +694,31 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     // This includes both localhost (for dev) and CloudFront (for prod)
     cfnSampleClient.callbackUrLs = [
       'http://localhost:3001/callback',
+      'http://localhost:5174/callback',
       `https://${this.sampleClientDistribution.distributionDomainName}/callback`,
     ];
     cfnSampleClient.logoutUrLs = [
       'http://localhost:3001',
+      'http://localhost:5174',
       `https://${this.sampleClientDistribution.distributionDomainName}`,
+    ];
+
+    // Update WebMobileClient (login-ui) callback URLs with CloudFront domain
+    const cfnWebMobileClient = this.webMobileClient.node.defaultChild as cognito.CfnUserPoolClient;
+    cfnWebMobileClient.callbackUrLs = [
+      'http://localhost:3000/oauth2/callback',
+      'http://localhost:3000/activate',
+      'http://localhost:3000/profile/callback',
+      'http://localhost:5173/activate',
+      'http://localhost:5173/profile/callback',
+      `https://${this.loginUiDistribution.distributionDomainName}/activate`,
+      `https://${this.loginUiDistribution.distributionDomainName}/profile/callback`,
+    ];
+    cfnWebMobileClient.logoutUrLs = [
+      'http://localhost:3000',
+      'http://localhost:3000/logout',
+      'http://localhost:5173',
+      `https://${this.loginUiDistribution.distributionDomainName}`,
     ];
   }
 }

@@ -1,73 +1,89 @@
-# React + TypeScript + Vite
+# TheSafeZone Login UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Centralized identity management UI for TheSafeZone applications. Handles device activation for VR headsets and user profile management.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Device Activation**: Allows users to activate VR devices using a code displayed on the headset
+- **Profile Management**: Centralized profile editing page for all TheSafeZone applications
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
 
-## Expanding the ESLint configuration
+2. Fill in your Cognito configuration values in `.env`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Environment Variables
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Variable | Description |
+|----------|-------------|
+| `VITE_COGNITO_USER_POOL_ID` | Cognito User Pool ID |
+| `VITE_COGNITO_CLIENT_ID` | Cognito App Client ID |
+| `VITE_COGNITO_DOMAIN` | Cognito domain for OAuth endpoints |
+| `VITE_API_ENDPOINT` | API Gateway endpoint for Device Code flow |
+| `VITE_TRUSTED_ORIGINS` | Comma-separated list of trusted origins for profile redirects |
+
+## Profile Management
+
+The profile page (`/profile`) allows users to edit their profile attributes:
+- Display Name
+- First Name
+- Last Name
+- Interests
+
+### Client Integration
+
+Client applications can redirect users to the profile page for editing:
+
+```typescript
+const loginUiUrl = 'https://login.thesafezone.com';
+const returnUrl = encodeURIComponent(window.location.href);
+window.location.href = `${loginUiUrl}/profile?return_url=${returnUrl}`;
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+After editing, users are redirected back to the `return_url` if it's from a trusted origin.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Trusted Origins
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+For security, only URLs from trusted origins are allowed for redirects. Configure trusted origins in the `VITE_TRUSTED_ORIGINS` environment variable:
+
+```
+VITE_TRUSTED_ORIGINS=https://app.thesafezone.com,https://sample.thesafezone.com
+```
+
+## Testing
+
+Run tests:
+```bash
+npm test
+```
+
+Run tests in watch mode:
+```bash
+npm run test:watch
+```
+
+## Building
+
+Build for production:
+```bash
+npm run build
+```
+
+Preview production build:
+```bash
+npm run preview
 ```

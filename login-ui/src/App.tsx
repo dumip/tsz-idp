@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ActivatePage } from './pages';
+import { ActivatePage, ProfilePage, ProfileCallbackPage } from './pages';
 
 function App() {
   return (
@@ -7,6 +7,10 @@ function App() {
       <Routes>
         {/* Device activation for VR */}
         <Route path="/activate" element={<ActivatePage />} />
+        
+        {/* Profile management */}
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/callback" element={<ProfileCallbackPage />} />
         
         {/* Default redirect to activate */}
         <Route path="/" element={<Navigate to="/activate" replace />} />
