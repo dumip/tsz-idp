@@ -85,20 +85,20 @@
     - After auth, call /device/authorize to complete device authorization
     - _Requirements: 9.3_
 
-- [ ] 6. Deploy infrastructure with CDK
-  - [ ] 6.1 Deploy Cognito resources
+- [x] 6. Deploy infrastructure with CDK
+  - [x] 6.1 Deploy Cognito resources
     - Deploy User Pool and Identity Pool
     - Configure Cognito domain for /oauth2 endpoints
     - Configure Managed Login branding
     - _Requirements: 1.4, 1.5, 12.1_
-  - [ ] 6.2 Deploy API Gateway and Device Code Lambda
+  - [x] 6.2 Deploy API Gateway and Device Code Lambda
     - Deploy Device Code Lambda
     - Configure API Gateway routes for /device/code, /device/token, /device/authorize
     - _Requirements: 9.1_
-  - [ ] 6.3 Deploy device activation page
+  - [x] 6.3 Deploy device activation page
     - Deploy S3 bucket for static activation page
     - Configure CloudFront distribution
     - _Requirements: 9.3_
 
-- [ ] 7. Final Checkpoint - Ensure all tests pass
+- [x] 7. Final Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.

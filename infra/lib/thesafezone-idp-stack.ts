@@ -4,6 +4,10 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Construct } from 'constructs';
@@ -29,6 +33,8 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
   public readonly deviceCodeTable: dynamodb.Table;
   public readonly deviceCodeLambda: lambda.Function;
   public readonly deviceCodeApi: apigateway.RestApi;
+  public readonly loginUiBucket: s3.Bucket;
+  public readonly loginUiDistribution: cloudfront.Distribution;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -501,6 +507,83 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'DeviceCodeLambdaArn', {
       value: this.deviceCodeLambda.functionArn,
       description: 'Device Code Lambda ARN',
+    });
+
+    // Create S3 bucket for Login UI static hosting (Requirement 9.3)
+    this.loginUiBucket = new s3.Bucket(this, 'LoginUiBucket', {
+      bucketName: `thesafezone-login-ui-${this.account}-${this.region}`,
+      // Block all public access - CloudFront will access via OAC
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      // Enable versioning for rollback capability
+      versioned: true,
+      // Removal policy for development (change to RETAIN for production)
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+      // Enable encryption
+      encryption: s3.BucketEncryption.S3_MANAGED,
+    });
+
+    // Create CloudFront distribution for Login UI
+    this.loginUiDistribution = new cloudfront.Distribution(this, 'LoginUiDistribution', {
+      comment: 'TheSafeZone Login UI - Device Activation Page',
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(this.loginUiBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        compress: true,
+      },
+      // SPA routing - return index.html for all 404s
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+      ],
+      defaultRootObject: 'index.html',
+      // Enable HTTP/2 and HTTP/3 for better performance
+      httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
+      // Price class - use all edge locations for global coverage
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+    });
+
+    // Deploy Login UI static files to S3 (if dist folder exists)
+    const loginUiDistPath = path.join(__dirname, '../../login-ui/dist');
+    if (fs.existsSync(loginUiDistPath)) {
+      new s3deploy.BucketDeployment(this, 'LoginUiDeployment', {
+        sources: [s3deploy.Source.asset(loginUiDistPath)],
+        destinationBucket: this.loginUiBucket,
+        distribution: this.loginUiDistribution,
+        distributionPaths: ['/*'],
+      });
+    }
+
+    new cdk.CfnOutput(this, 'LoginUiBucketName', {
+      value: this.loginUiBucket.bucketName,
+      description: 'S3 bucket name for Login UI',
+    });
+
+    new cdk.CfnOutput(this, 'LoginUiDistributionId', {
+      value: this.loginUiDistribution.distributionId,
+      description: 'CloudFront distribution ID for Login UI',
+    });
+
+    new cdk.CfnOutput(this, 'LoginUiUrl', {
+      value: `https://${this.loginUiDistribution.distributionDomainName}`,
+      description: 'Login UI URL (CloudFront)',
+    });
+
+    new cdk.CfnOutput(this, 'ActivatePageUrl', {
+      value: `https://${this.loginUiDistribution.distributionDomainName}/activate`,
+      description: 'Device Activation Page URL',
     });
   }
 }

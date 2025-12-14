@@ -209,8 +209,8 @@ describe('TheSafeZoneIdpStack', () => {
       });
     });
 
-    test('Two app clients are created', () => {
-      template.resourceCountIs('AWS::Cognito::UserPoolClient', 2);
+    test('Three app clients are created (web/mobile, VR, sample)', () => {
+      template.resourceCountIs('AWS::Cognito::UserPoolClient', 3);
     });
   });
 
