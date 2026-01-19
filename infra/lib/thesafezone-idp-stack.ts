@@ -3,6 +3,7 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as lambdaNodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
@@ -32,7 +33,7 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
   public readonly sampleClient: cognito.UserPoolClient;
   public readonly arthurClient: cognito.UserPoolClient;
   public readonly deviceCodeTable: dynamodb.Table;
-  public readonly deviceCodeLambda: lambda.Function;
+  public readonly deviceCodeLambda: lambdaNodejs.NodejsFunction;
   public readonly deviceCodeApi: apigateway.RestApi;
   public readonly loginUiBucket: s3.Bucket;
   public readonly loginUiDistribution: cloudfront.Distribution;
@@ -537,11 +538,12 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     const verificationUri = this.node.tryGetContext('verificationUri') || 'https://thesafezone.eu/activate';
 
     // Create Device Code Lambda function (Requirements: 9.1, 9.2, 9.3, 9.4, 9.5)
-    this.deviceCodeLambda = new lambda.Function(this, 'DeviceCodeLambda', {
+    // Using NodejsFunction to automatically bundle and transpile TypeScript
+    this.deviceCodeLambda = new lambdaNodejs.NodejsFunction(this, 'DeviceCodeLambda', {
       functionName: 'thesafezone-device-code',
+      entry: path.join(__dirname, 'lambda/device-code/index.ts'),
+      handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, 'lambda/device-code')),
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {
