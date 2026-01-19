@@ -164,12 +164,12 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       'http://localhost:5174',
     ];
     const arthurClientCallbackUrls = this.node.tryGetContext('arthurClientCallbackUrls') || [
-      'http://localhost:3002/callback',
-      'http://localhost:5175/callback',
+      'http://localhost:3001/callback',
+      'http://localhost:5174/callback',
     ];
     const arthurClientLogoutUrls = this.node.tryGetContext('arthurClientLogoutUrls') || [
-      'http://localhost:3002',
-      'http://localhost:5175',
+      'http://localhost:3001',
+      'http://localhost:5174',
     ];
 
     // Create public client for web/mobile (PKCE required, no secret)
