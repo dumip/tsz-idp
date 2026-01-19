@@ -30,6 +30,7 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
   public readonly webMobileClient: cognito.UserPoolClient;
   public readonly vrClient: cognito.UserPoolClient;
   public readonly sampleClient: cognito.UserPoolClient;
+  public readonly arthurClient: cognito.UserPoolClient;
   public readonly deviceCodeTable: dynamodb.Table;
   public readonly deviceCodeLambda: lambda.Function;
   public readonly deviceCodeApi: apigateway.RestApi;
@@ -162,6 +163,14 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       'http://localhost:3001',
       'http://localhost:5174',
     ];
+    const arthurClientCallbackUrls = this.node.tryGetContext('arthurClientCallbackUrls') || [
+      'http://localhost:3002/callback',
+      'http://localhost:5175/callback',
+    ];
+    const arthurClientLogoutUrls = this.node.tryGetContext('arthurClientLogoutUrls') || [
+      'http://localhost:3002',
+      'http://localhost:5175',
+    ];
 
     // Create public client for web/mobile (PKCE required, no secret)
     // Requirements: 10.1, 10.2, 10.3, 10.4
@@ -252,6 +261,35 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       enableTokenRevocation: true,
     });
 
+    // Create public client for Arthur (Vercel-hosted app, PKCE required, no secret)
+    // This is a third-party client hosted on Vercel integrating with TheSafeZone IDP
+    this.arthurClient = this.userPool.addClient('ArthurClient', {
+      userPoolClientName: 'thesafezone-arthur',
+      generateSecret: false, // Public client - no secret
+      authFlows: {
+        userSrp: true,
+        userPassword: false,
+      },
+      oAuth: {
+        flows: {
+          authorizationCodeGrant: true,
+          implicitCodeGrant: false,
+        },
+        scopes: [
+          cognito.OAuthScope.OPENID,
+          cognito.OAuthScope.EMAIL,
+          cognito.OAuthScope.PROFILE,
+        ],
+        callbackUrls: arthurClientCallbackUrls,
+        logoutUrls: arthurClientLogoutUrls,
+      },
+      // Token validity (Requirement 11.1)
+      accessTokenValidity: cdk.Duration.hours(1),
+      idTokenValidity: cdk.Duration.hours(1),
+      refreshTokenValidity: cdk.Duration.days(30),
+      enableTokenRevocation: true,
+    });
+
     // Create Cognito Identity Pool for anonymous authentication (Requirement 4.1, 4.2)
     this.identityPool = new cognito.CfnIdentityPool(this, 'TheSafeZoneIdentityPool', {
       identityPoolName: 'thesafezone-identity-pool',
@@ -268,6 +306,10 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
         },
         {
           clientId: this.sampleClient.userPoolClientId,
+          providerName: this.userPool.userPoolProviderName,
+        },
+        {
+          clientId: this.arthurClient.userPoolClientId,
           providerName: this.userPool.userPoolProviderName,
         },
       ],
@@ -389,6 +431,27 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       ],
     });
 
+    // Apply same branding to Arthur client
+    new cognito.CfnManagedLoginBranding(this, 'ArthurClientBranding', {
+      userPoolId: this.userPool.userPoolId,
+      clientId: this.arthurClient.userPoolClientId,
+      settings: managedLoginSettings,
+      assets: [
+        {
+          category: 'FORM_LOGO',
+          colorMode: 'LIGHT',
+          extension: 'PNG',
+          bytes: logoBase64,
+        },
+        {
+          category: 'FORM_LOGO',
+          colorMode: 'DARK',
+          extension: 'PNG',
+          bytes: logoBase64,
+        },
+      ],
+    });
+
     // Output the User Pool ID and ARN
     new cdk.CfnOutput(this, 'UserPoolId', {
       value: this.userPool.userPoolId,
@@ -418,6 +481,11 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'SampleClientId', {
       value: this.sampleClient.userPoolClientId,
       description: 'Sample Client App Client ID (for testing OIDC flow)',
+    });
+
+    new cdk.CfnOutput(this, 'ArthurClientId', {
+      value: this.arthurClient.userPoolClientId,
+      description: 'Arthur Client App Client ID (Vercel-hosted app)',
     });
 
     new cdk.CfnOutput(this, 'CognitoDomain', {
