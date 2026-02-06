@@ -167,6 +167,8 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     const arthurClientCallbackUrls = this.node.tryGetContext('arthurClientCallbackUrls') || [
       'http://localhost:3001/callback',
       'http://localhost:5174/callback',
+      'https://dev-api-enterprise-a.arthur-dev.digital/auth/sso/callback/oauth2',
+      'https://api.arthur.digital/auth/sso/callback/oauth2'
     ];
     const arthurClientLogoutUrls = this.node.tryGetContext('arthurClientLogoutUrls') || [
       'http://localhost:3001',
