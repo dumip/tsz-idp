@@ -264,11 +264,11 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
       enableTokenRevocation: true,
     });
 
-    // Create public client for Arthur (Vercel-hosted app, PKCE required, no secret)
-    // This is a third-party client hosted on Vercel integrating with TheSafeZone IDP
+    // Create confidential client for Arthur (server-side backed authentication)
+    // This is a third-party client integrating with TheSafeZone IDP using client_secret
     this.arthurClient = this.userPool.addClient('ArthurClient', {
       userPoolClientName: 'thesafezone-arthur',
-      generateSecret: false, // Public client - no secret
+      generateSecret: true, // Confidential client - server-side auth with client_secreter-side auth with client_secret
       authFlows: {
         userSrp: true,
         userPassword: false,
@@ -489,6 +489,11 @@ export class TheSafeZoneIdpStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ArthurClientId', {
       value: this.arthurClient.userPoolClientId,
       description: 'Arthur Client App Client ID (Vercel-hosted app)',
+    });
+
+    new cdk.CfnOutput(this, 'ArthurClientSecret', {
+      value: this.arthurClient.userPoolClientSecret.unsafeUnwrap(),
+      description: 'Arthur Client Secret (for server-side authentication)',
     });
 
     new cdk.CfnOutput(this, 'CognitoDomain', {
