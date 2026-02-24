@@ -4,7 +4,7 @@
  * 
  * Requirements: 1.1 (PKCE), 1.4 (Discovery), 10.4 (Public client PKCE enforcement)
  */
-import { oauthConfig, getCognitoAuthorizeUrl, getCognitoTokenUrl, getCognitoLogoutUrl } from '../config/oauth';
+import { oauthConfig, getCognitoAuthorizeUrl, getCognitoTokenUrl, getCognitoLogoutUrl, isConfidentialClient } from '../config/oauth';
 import { generatePKCEPair, storePKCEVerifier, getStoredPKCEVerifier, clearPKCEVerifier } from '../utils/pkce';
 
 /**
@@ -190,28 +190,54 @@ export async function handleCallback(code: string, state: string): Promise<AuthS
 }
 
 /**
- * Exchange authorization code for tokens
+ * Exchange authorization code for tokens.
+ *
+ * When a client secret is configured the request is routed through the
+ * backend proxy (/api/token) which attaches Basic auth so the secret
+ * never reaches the browser.  Otherwise the standard public-client
+ * PKCE flow talks directly to Cognito.
  */
 async function exchangeCodeForTokens(code: string, codeVerifier: string): Promise<TokenResponse> {
-  const params = new URLSearchParams({
-    grant_type: 'authorization_code',
-    client_id: oauthConfig.clientId,
-    code,
-    redirect_uri: oauthConfig.redirectUri,
-    code_verifier: codeVerifier,
-  });
+  let response: Response;
 
-  const response = await fetch(getCognitoTokenUrl(), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: params.toString(),
-  });
+  if (isConfidentialClient()) {
+    // Confidential client — proxy through backend
+    response = await fetch('/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code,
+        code_verifier: codeVerifier,
+        redirect_uri: oauthConfig.redirectUri,
+      }),
+    });
+  } else {
+    // Public client — direct PKCE exchange
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: oauthConfig.clientId,
+      code,
+      redirect_uri: oauthConfig.redirectUri,
+      code_verifier: codeVerifier,
+    });
+
+    response = await fetch(getCognitoTokenUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+  }
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error_description || error.error || 'Token exchange failed');
+    const text = await response.text();
+    let message = `Token exchange failed (${response.status})`;
+    try {
+      const err = JSON.parse(text);
+      message = err.error_description || err.error || message;
+    } catch {
+      if (text) message = text;
+    }
+    throw new Error(message);
   }
 
   return response.json();

@@ -2,7 +2,7 @@
  * OAuth/OIDC configuration for the sample client
  */
 export const oauthConfig = {
-  // Cognito client ID (public client, no secret)
+  // Cognito client ID
   clientId: import.meta.env.VITE_COGNITO_CLIENT_ID || '',
   
   // Cognito domain for OAuth endpoints
@@ -13,7 +13,18 @@ export const oauthConfig = {
   
   // OAuth scopes
   scopes: ['openid', 'email', 'profile'],
+
+  // Client secret (optional). When set, token exchange is proxied through
+  // the backend so the secret never reaches the browser.
+  clientSecret: import.meta.env.VITE_CLIENT_SECRET || '',
 };
+
+/**
+ * Whether this client is configured as a confidential client (has a secret).
+ */
+export function isConfidentialClient(): boolean {
+  return oauthConfig.clientSecret.length > 0;
+}
 
 /**
  * Get the Cognito OAuth authorize URL
